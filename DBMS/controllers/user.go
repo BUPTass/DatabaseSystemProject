@@ -82,16 +82,50 @@ func Login(c echo.Context) error {
 	}
 }
 func GetUsers(c echo.Context) error {
-	//"/show/users/username=name"
-	name := c.QueryParam("username")
+	//"/show/users/adminname=name"
+	name := c.QueryParam("adminname")
+	//check session
 	sess, err := session.Get(name, c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
+	//select users
 	var ans []UserInfo
 	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", DbName))
 	if err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, ans)
+}
+func AddUser(c echo.Context) error {
+	//"/add/user/adminname=name&username=name"
+	name := c.QueryParam("adminname")
+	uname := c.QueryParam("username")
+	//check session
+	sess, err := session.Get(name, c)
+	if err != nil || sess.Values["level"] != 0 {
+		return err
+	}
+	//change user conformed to 1
+	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where userName = %s", DbName, uname))
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "success")
+}
+func DeleteUser(c echo.Context) error {
+	//"/delete/user/adminname=name&username=name"
+	name := c.QueryParam("adminname")
+	uname := c.QueryParam("username")
+	//check session
+	sess, err := session.Get(name, c)
+	if err != nil || sess.Values["level"] != 0 {
+		return err
+	}
+	//delete normal user:uname
+	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username = %s and level = 1", DbName, uname))
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "success")
 }
