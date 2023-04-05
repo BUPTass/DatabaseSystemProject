@@ -129,3 +129,21 @@ func DeleteUser(c echo.Context) error {
 	}
 	return c.String(http.StatusOK, "success")
 }
+func Regist(c echo.Context) error {
+	//"/regist/username=name&password=password&level=num"
+	username := c.QueryParam("username")
+	password := c.QueryParam("password")
+	level := c.QueryParam("level")
+	var ans []UserInfo
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where userName = %s", DbName, username))
+	if err != nil {
+		return err
+	} else if len(ans) != 0 {
+		return c.String(http.StatusOK, "username exist")
+	}
+	_, err = user_info.Exec(fmt.Sprintf("insert into %s values(%s,%s,%s,%s)", DbName, username, password, level, "0"))
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "success")
+}

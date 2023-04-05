@@ -29,9 +29,11 @@ func main() {
 	sessionKey = "anything"
 	e.Use(session.Middleware(sessions.NewFilesystemStore(sessionPath, []byte(sessionKey))))
 	//route
-	e.POST("/login", controllers.Login)            //user login
-	e.GET("/show/users", controllers.GetUsers)     //show all users
-	e.POST("/add/user", controllers.AddUser)       //add user
-	e.POST("/delete/user", controllers.DeleteUser) //delete user
+	e.POST("/login", controllers.Login)              //user login
+	e.GET("/show/users", controllers.GetUsers)       //show all users
+	e.POST("/add/user", controllers.AddUser)         //add user
+	e.DELETE("/delete/user", controllers.DeleteUser) //delete user
+	e.POST("/regist", controllers.Regist)            //user regist
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
