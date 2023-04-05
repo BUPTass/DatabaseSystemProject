@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
@@ -13,7 +14,7 @@ var (
 	password string = ""
 	ip       string = "127.0.0.1"
 	port     int    = 3306
-	dbName   string = ""
+	dbName   string = "test"
 	charSet  string = "utf-8"
 )
 var e *echo.Echo
@@ -30,10 +31,12 @@ func login(c echo.Context) error {
 	username = c.QueryParam("username")
 	password = c.QueryParam("password")
 	dbName = c.QueryParam("dbName")
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s", username, password, ip, port, dbName, charSet)
-	_db, err := sql.Open("mysql", dsn)
-	if err != nil {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, ip, port, dbName)
+	_db, _ := sql.Open("mysql", dsn)
+	err := _db.Ping()
+	if err == nil {
 		db = _db
+		return c.String(http.StatusOK, username+":"+dbName)
 	}
 	return err
 }
