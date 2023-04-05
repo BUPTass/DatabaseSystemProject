@@ -14,8 +14,8 @@ import (
 type UserInfo struct {
 	UserName  string `db:"userName"`
 	Password  string `db:"password"`
-	Level     int    `db:"level"`    //0 for admin,1 for normal user
-	Conformed int    `db:"conformed` //false for unavailable
+	Level     int    `db:"level"`     //0 for admin,1 for normal user
+	Conformed int    `db:"conformed"` //false for unavailable
 }
 
 var dbinfo struct {
