@@ -5,6 +5,8 @@ import (
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,10 +20,17 @@ var dbinfo struct {
 }
 var e *echo.Echo
 var db *sql.DB
+var sessionKey string
 
 func main() {
 	e = echo.New()
-	e.POST("/login", controllers.Login) //user login
+	//session init
+	sessionPath := "./session_data"
+	sessionKey = "anything"
+	e.Use(session.Middleware(sessions.NewFilesystemStore(sessionPath, []byte(sessionKey))))
+	//route
+	e.POST("/login", controllers.Login)        //user login
+	e.GET("/show/users", controllers.GetUsers) //show all users
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

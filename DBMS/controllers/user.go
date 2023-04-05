@@ -63,7 +63,7 @@ func Login(c echo.Context) error {
 	}
 	if check_password(dbinfo.Username, dbinfo.Password) {
 		//create session
-		sess, _ := session.Get("user_session", c)
+		sess, _ := session.Get(dbinfo.Username, c)
 		sess.Options = &sessions.Options{
 			Path:   "/",
 			MaxAge: 86400 * 7,
@@ -73,11 +73,25 @@ func Login(c echo.Context) error {
 		sess.Values["level"] = get_level(dbinfo.Username, dbinfo.Password)
 		sess.Values["isLogin"] = true
 
-		//保存用户会话数据
+		//saving data
 		sess.Save(c.Request(), c.Response())
 
 		return c.String(http.StatusOK, "login success")
 	} else {
 		return c.String(http.StatusOK, "please check your username and password")
 	}
+}
+func GetUsers(c echo.Context) error {
+	//"/show/users/username=name"
+	name := c.QueryParam("username")
+	sess, err := session.Get(name, c)
+	if err != nil || sess.Values["level"] != 0 {
+		return err
+	}
+	var ans []UserInfo
+	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", DbName))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, ans)
 }
