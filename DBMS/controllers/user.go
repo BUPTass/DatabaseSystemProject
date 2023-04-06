@@ -19,18 +19,18 @@ type UserInfo struct {
 }
 
 const (
-	Username  string = "root"
-	Password  string = "1594568520h"
-	DbName    string = "userinfo"
-	TableName string = "info"
-	ip        string = "127.0.0.1"
-	port      int    = 3306
+	Username          string = "root"
+	Password          string = "1594568520h"
+	UserDbName        string = "userinfo"
+	UserinfoTableName string = "info"
+	Ip                string = "127.0.0.1"
+	Port              int    = 3306
 )
 
 var user_info *sqlx.DB
 
 func init() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", Username, Password, ip, port, DbName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", Username, Password, Ip, Port, UserDbName)
 	user_info, _ = sqlx.Open("mysql", dsn)
 	if err := user_info.Ping(); err != nil {
 		panic(err)
@@ -38,12 +38,12 @@ func init() {
 }
 func check_password(username, password string) bool {
 	var ans []UserInfo
-	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", TableName, username, password))
+	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", UserinfoTableName, username, password))
 	return len(ans) == 1
 }
 func get_level(username, password string) int {
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", TableName, username, password))
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", UserinfoTableName, username, password))
 	if err == nil && len(ans) == 1 {
 		return ans[0].Level
 	}
@@ -85,7 +85,7 @@ func GetUsers(c echo.Context) error {
 	}
 	//select users
 	var ans []UserInfo
-	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", TableName))
+	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", UserinfoTableName))
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func AddUser(c echo.Context) error {
 		return err
 	}
 	//change user conformed to 1
-	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where username like '%s'", TableName, uname))
+	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where username like '%s'", UserinfoTableName, uname))
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func DeleteUser(c echo.Context) error {
 		return err
 	}
 	//delete normal user:uname
-	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username like '%s' and level = 1", TableName, uname))
+	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username like '%s' and level = 1", UserinfoTableName, uname))
 	if err != nil {
 		return err
 	}
@@ -130,11 +130,11 @@ func Regist(c echo.Context) error {
 	password := c.QueryParam("password")
 	level := c.QueryParam("level")
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s'", TableName, username))
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s'", UserinfoTableName, username))
 	if err != nil || len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
-	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%s',%s,%s)", TableName, username, password, level, "0"))
+	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%s',%s,%s)", UserinfoTableName, username, password, level, "0"))
 	if err != nil {
 		return err
 	}
