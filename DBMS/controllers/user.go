@@ -141,19 +141,13 @@ func Regist(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 func Logout(c echo.Context) error {
-	//"/logout?username=name&password=pwd"
+	//"/logout?username=name"
 	username := c.QueryParam("username")
-	password := c.QueryParam("password")
-	if check_password(username, password) {
-		//create session
-		sess, _ := session.Get(username, c)
-		sess.Options = &sessions.Options{
-			Path:   "/",
-			MaxAge: -1,
-		}
-		sess.Save(c.Request(), c.Response())
-		return c.String(http.StatusOK, "logout success")
-	} else {
-		return c.String(http.StatusOK, "please check your username and password")
+	sess, _ := session.Get(username, c)
+	sess.Options = &sessions.Options{
+		Path:   "/",
+		MaxAge: -1,
 	}
+	sess.Save(c.Request(), c.Response())
+	return c.String(http.StatusOK, "logout success")
 }
