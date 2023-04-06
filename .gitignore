@@ -16,3 +16,5 @@
 
 *.mod
 *.sum
+#statics data(session)
+DBMS/statics
