@@ -26,6 +26,10 @@ func main() {
 	e.POST("/add/user", controllers.AddUser)         //add user
 	e.DELETE("/delete/user", controllers.DeleteUser) //delete user
 	e.POST("/regist", controllers.Regist)            //user regist
+	//database management
+	e.GET("/manage/databaseInfo", controllers.DatabaseInfo) //check database info
+	e.GET("/manage/databaseConnection", controllers.DatabaseConnection)
+	e.POST("/manage/databse", controllers.SetDatabase)
 
 	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
 
