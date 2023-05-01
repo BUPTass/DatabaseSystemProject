@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="root@116.63.163.97:22" type="ssh/sftp" uuid="518dbc44-f77b-4fcb-a19b-fe88f9c0885f">
+        <config>
+          <option name="projectRootOnTarget" value="/root/DatabaseSystemProject" />
+          <option name="serverName" value="root@116.63.163.97:22 password" />
+        </config>
+        <ContributedStateBase type="GoLanguageRuntime">
+          <config />
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>
