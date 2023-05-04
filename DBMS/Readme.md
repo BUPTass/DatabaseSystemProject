@@ -36,13 +36,13 @@ statics存放各个静态数据，其中session_data文件夹下存放各个用�
 
 ##### /logout
 
-路由形如`"/logout?username=name"`（例如 `/logout?username=root`)。
+路由形如`"/logout"`（例如 `/logout)。
 
 ​	提供用户名进行登出
 
 ##### /show/users
 
-路由形如`"/show/users?adminname=name"` （例如 `/show/users?adminname=root`)
+路由形如`"/show/users"` （例如 `/show/users`)
 
 ​	管理员在登陆状态下查看所有用户（及其状态）。返回一个json表，其内容为用户状态，表项结构如下
 
@@ -57,13 +57,13 @@ type UserInfo struct {
 
 ##### /add/user
 
-路由形如`"/add/user?adminname=name&username=name"`（例如 `"/add/user?adminname=root&username=test1"`)。
+路由形如`"/add/user?username=name"`（例如 `"/add/user?username=test1"`)。
 
 ​	管理员在登陆状态下添加指定用户（将用户的Conformed改为true）。
 
 ##### /delete/user
 
-路由形如`"/delete/user?adminname=name&username=name"`（例如 `"/delete/user?adminname=root&username=test1"`)。
+路由形如`"/delete/user?username=name"`（例如 `"/delete/user?username=test1"`)。
 
 ​	管理员在登陆状态下删除指定用户（删除其对应记录）。
 
@@ -75,7 +75,7 @@ type UserInfo struct {
 
 ##### /manage/databaseInfo
 
-路由形如`"/manage/databaseInfo?adminname=name&item=itemname&condition=string"`
+路由形如`"/manage/databaseInfo?item=itemname&condition=string"`
 
 ​	管理员在登陆后获取数据库信息。condition有三种情况，
 
@@ -117,7 +117,7 @@ type UserInfo struct {
 
 ##### /manage/databaseConnection
 
-路由形如`"/manage/databaseConnection?adminname=name&condition=string"`
+路由形如`"/manage/databaseConnection?condition=string"`
 
 ​	管理员在登陆后获取数据库连接信息。condition有三种情况，
 
@@ -163,6 +163,6 @@ type UserInfo struct {
 
 ##### /manage/databse
 
-路由形如`"/manage/database?adminname=name&item=itemname&value=value"`
+路由形如`"/manage/database?item=itemname&value=value"`
 
 ​	管理员在登陆状态下设置数据库参数，相当于在mysql上运行`set itemname=value`（其中itemname及value给定）

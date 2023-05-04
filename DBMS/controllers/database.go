@@ -31,12 +31,11 @@ func database_init() {
 }
 
 func DatabaseInfo(c echo.Context) error {
-	//"/manage/databaseInfo?adminname=name&item=itemname&condition=string"
-	name := c.QueryParam("adminname")
+	//"/manage/databaseInfo?item=itemname&condition=string"
 	item := c.QueryParam("item")
 	cond := c.QueryParam("condition")
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
@@ -77,11 +76,10 @@ func DatabaseInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, ans)
 }
 func DatabaseConnection(c echo.Context) error {
-	//"/manage/databaseConnection?adminname=name&condition=string"
-	name := c.QueryParam("adminname")
+	//"/manage/databaseConnection?condition=string"
 	cond := c.QueryParam("condition")
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
@@ -151,12 +149,11 @@ func DatabaseConnection(c echo.Context) error {
 	return c.String(http.StatusOK, "please check your condition")
 }
 func SetDatabase(c echo.Context) error {
-	//"/manage/database?adminname=name&item=itemname&value=value"
-	name := c.QueryParam("adminname")
+	//"/manage/database?item=itemname&value=value"
 	item := c.QueryParam("item")
 	cond := c.QueryParam("value")
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
