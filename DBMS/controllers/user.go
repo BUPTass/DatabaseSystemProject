@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"crypto/hmac"
+	"crypto/sha1"
 	"fmt"
 	"net/http"
 
@@ -37,14 +39,21 @@ func init() {
 	}
 	database_init()
 }
+func get_hash(text, key string) []byte {
+	hash := hmac.New(sha1.New, []byte(username))
+	hash.Write([]byte(password))
+	return hash.Sum(nil)
+}
 func check_password(username, password string) bool {
+	hashText := get_hash(password, username)
 	var ans []UserInfo
-	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", userinfoTableName, username, password))
+	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName, username, hashText))
 	return len(ans) == 1
 }
 func get_level(username, password string) int {
+	hashText := get_hash(password, username)
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%s' and conformed = 1", userinfoTableName, username, password))
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName, username, hashText))
 	if err == nil && len(ans) == 1 {
 		return ans[0].Level
 	}
@@ -56,7 +65,8 @@ func Login(c echo.Context) error {
 	password := c.QueryParam("password")
 	if check_password(username, password) {
 		//create session
-		sess, _ := session.Get(username, c)
+
+		sess, _ := session.Get("session", c)
 		sess.Options = &sessions.Options{
 			Path:   "/",
 			MaxAge: 86400 * 7,
@@ -64,7 +74,6 @@ func Login(c echo.Context) error {
 		//record session data
 		sess.Values["id"] = username
 		sess.Values["level"] = get_level(username, password)
-		sess.Values["isLogin"] = true
 
 		//saving data
 		err := sess.Save(c.Request(), c.Response())
@@ -73,14 +82,13 @@ func Login(c echo.Context) error {
 		}
 		return c.String(http.StatusOK, fmt.Sprintf("login success %s %d", username, sess.Values["level"]))
 	} else {
-		return c.String(http.StatusOK, "please check your username and password")
+		return c.String(http.StatusForbidden, "please check your username and password")
 	}
 }
 func GetUsers(c echo.Context) error {
-	//"/show/users?adminname=name"
-	name := c.QueryParam("adminname")
+	//"/show/users"
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
@@ -93,12 +101,11 @@ func GetUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, ans)
 }
 func AddUser(c echo.Context) error {
-	//"/add/user?adminname=name&username=name"
-	name := c.QueryParam("adminname")
+	//"/add/user?username=name"
 	uname := c.QueryParam("username")
 
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
@@ -110,11 +117,10 @@ func AddUser(c echo.Context) error {
 	return c.String(http.StatusOK, "success")
 }
 func DeleteUser(c echo.Context) error {
-	//"/delete/user?adminname=name&username=name"
-	name := c.QueryParam("adminname")
+	//"/delete/user?username=name"
 	uname := c.QueryParam("username")
 	//check session
-	sess, err := session.Get(name, c)
+	sess, err := session.Get("session", c)
 	if err != nil || sess.Values["level"] != 0 {
 		return err
 	}
@@ -135,16 +141,16 @@ func Regist(c echo.Context) error {
 	if err != nil || len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
-	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%s',%s,%s)", userinfoTableName, username, password, level, "0"))
+	hashText := get_hash(password, username)
+	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%s',%s,%s)", userinfoTableName, username, hashText, level, "0"))
 	if err != nil {
 		return err
 	}
 	return c.String(http.StatusOK, "success")
 }
 func Logout(c echo.Context) error {
-	//"/logout?username=name"
-	username := c.QueryParam("username")
-	sess, _ := session.Get(username, c)
+	//"/logout"
+	sess, _ := session.Get("session", c)
 	sess.Options = &sessions.Options{
 		Path:   "/",
 		MaxAge: -1,
