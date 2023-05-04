@@ -21,39 +21,40 @@ type UserInfo struct {
 }
 
 const (
-	username          string = "root"
-	password          string = "1594568520h"
-	userDbName        string = "userinfo"
-	userinfoTableName string = "info"
-	ip                string = "127.0.0.1"
-	port              int    = 3306
+	username_          string = "root"
+	password_          string = "1594568520h"
+	userDbName_        string = "userinfo"
+	userinfoTableName_ string = "info"
+	ip_                string = "127.0.0.1"
+	port_              int    = 3306
 )
 
 var user_info *sqlx.DB
 
 func init() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, ip, port, userDbName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username_, password_, ip_, port_, userDbName_)
 	user_info, _ = sqlx.Open("mysql", dsn)
 	if err := user_info.Ping(); err != nil {
 		panic(err)
 	}
 	database_init()
+	user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, "root", get_hash("1594568520", "root"), "0", "1"))
 }
 func get_hash(text, key string) []byte {
-	hash := hmac.New(sha1.New, []byte(username))
-	hash.Write([]byte(password))
+	hash := hmac.New(sha1.New, []byte(key))
+	hash.Write([]byte(text))
 	return hash.Sum(nil)
 }
 func check_password(username, password string) bool {
 	hashText := get_hash(password, username)
 	var ans []UserInfo
-	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName, username, hashText))
+	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName_, username, hashText))
 	return len(ans) == 1
 }
 func get_level(username, password string) int {
 	hashText := get_hash(password, username)
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName, username, hashText))
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName_, username, hashText))
 	if err == nil && len(ans) == 1 {
 		return ans[0].Level
 	}
@@ -89,12 +90,15 @@ func GetUsers(c echo.Context) error {
 	//"/show/users"
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
+	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//select users
 	var ans []UserInfo
-	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", userinfoTableName))
+	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", userinfoTableName_))
 	if err != nil {
 		return err
 	}
@@ -106,11 +110,14 @@ func AddUser(c echo.Context) error {
 
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
 	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+	}
 	//change user conformed to 1
-	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where username like '%s'", userinfoTableName, uname))
+	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where username like '%s'", userinfoTableName_, uname))
 	if err != nil {
 		return err
 	}
@@ -121,11 +128,14 @@ func DeleteUser(c echo.Context) error {
 	uname := c.QueryParam("username")
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
 	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+	}
 	//delete normal user:uname
-	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username like '%s' and level = 1", userinfoTableName, uname))
+	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username like '%s' and level = 1", userinfoTableName_, uname))
 	if err != nil {
 		return err
 	}
@@ -137,12 +147,12 @@ func Regist(c echo.Context) error {
 	password := c.QueryParam("password")
 	level := c.QueryParam("level")
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s'", userinfoTableName, username))
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s'", userinfoTableName_, username))
 	if err != nil || len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
 	hashText := get_hash(password, username)
-	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%s',%s,%s)", userinfoTableName, username, hashText, level, "0"))
+	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, username, hashText, level, "0"))
 	if err != nil {
 		return err
 	}

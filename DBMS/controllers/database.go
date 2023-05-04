@@ -17,13 +17,13 @@ type databaseInfo struct {
 }
 
 const (
-	dataDbName string = "tdlte"
+	dataDbName_ string = "tdlte"
 )
 
 var db *sqlx.DB
 
 func database_init() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username, password, ip, port, dataDbName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username_, password_, ip_, port_, dataDbName_)
 	db, _ = sqlx.Open("mysql", dsn)
 	if err := db.Ping(); err != nil {
 		panic(err)
@@ -36,8 +36,11 @@ func DatabaseInfo(c echo.Context) error {
 	cond := c.QueryParam("condition")
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
+	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//if ask basic database information
 	if cond == "databaseinfo" {
@@ -49,12 +52,12 @@ func DatabaseInfo(c echo.Context) error {
 			DataDbName        string
 			Port              int
 		}
-		ans.DataDbName = dataDbName
-		ans.UserDbName = userDbName
-		ans.Username = username
-		ans.UserinfoTableName = userinfoTableName
-		ans.Ip = ip
-		ans.Port = port
+		ans.DataDbName = dataDbName_
+		ans.UserDbName = userDbName_
+		ans.Username = username_
+		ans.UserinfoTableName = userinfoTableName_
+		ans.Ip = ip_
+		ans.Port = port_
 		return c.JSON(http.StatusOK, ans)
 	}
 	var rows *sql.Rows
@@ -80,8 +83,11 @@ func DatabaseConnection(c echo.Context) error {
 	cond := c.QueryParam("condition")
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
+	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//query
 	//ip:查看当前连接中各个IP的连接数
@@ -154,8 +160,11 @@ func SetDatabase(c echo.Context) error {
 	cond := c.QueryParam("value")
 	//check session
 	sess, err := session.Get("session", c)
-	if err != nil || sess.Values["level"] != 0 {
+	if err != nil {
 		return err
+	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	_, err = db.Exec(fmt.Sprintf("set %s=%s", item, cond))
 	if err != nil {
