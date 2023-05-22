@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
 	"fmt"
 	"net/http"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserInfo struct {
@@ -38,27 +37,34 @@ func init() {
 		panic(err)
 	}
 	database_init()
-	user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, "root", get_hash("1594568520", "root"), "0", "1"))
+	user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, "root", get_hash("1594568520"), "0", "1"))
 }
-func get_hash(text, key string) []byte {
-	hash := hmac.New(sha1.New, []byte(key))
-	hash.Write([]byte(text))
-	return hash.Sum(nil)
+func get_hash(text string) []byte {
+	hash, _ := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+	return hash
 }
 func check_password(username, password string) bool {
-	hashText := get_hash(password, username)
 	var ans []UserInfo
-	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName_, username, hashText))
-	return len(ans) == 1
+	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and conformed = 1", userinfoTableName_, username))
+	if len(ans) != 1 {
+		return false
+	} else {
+		err := bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
+		return err != nil
+	}
 }
 func get_level(username, password string) int {
-	hashText := get_hash(password, username)
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and password like '%x' and conformed = 1", userinfoTableName_, username, hashText))
-	if err == nil && len(ans) == 1 {
-		return ans[0].Level
+	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and conformed = 1", userinfoTableName_, username))
+	if err != nil && len(ans) != 1 {
+		return -1
+	} else {
+		err := bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
+		if err != nil {
+			return ans[0].Level
+		}
+		return -1
 	}
-	return -1
 }
 func Login(c echo.Context) error {
 	//"/login?username=uname&password=pwd"
@@ -151,7 +157,7 @@ func Regist(c echo.Context) error {
 	if err != nil || len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
-	hashText := get_hash(password, username)
+	hashText := get_hash(password)
 	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, username, hashText, level, "0"))
 	if err != nil {
 		return err
