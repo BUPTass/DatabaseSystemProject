@@ -37,7 +37,6 @@ func init() {
 		panic(err)
 	}
 	database_init()
-	user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, "root", get_hash("1594568520"), "0", "1"))
 }
 func get_hash(text string) []byte {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
@@ -123,7 +122,8 @@ func AddUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//change user conformed to 1
-	_, err = user_info.Exec(fmt.Sprintf("update %s set conformed = 1 where username like '%s'", userinfoTableName_, uname))
+	stmt, err := user_info.Prepare("update ? set conformed = 1 where username like ?")
+	_, err = stmt.Exec(userinfoTableName_, uname)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,8 @@ func DeleteUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//delete normal user:uname
-	_, err = user_info.Exec(fmt.Sprintf("delete from %s where username like '%s' and level = 1", userinfoTableName_, uname))
+	stmt, err := user_info.Prepare("delete from ? where username like ? and level = 1")
+	_, err = stmt.Exec(userinfoTableName_, uname)
 	if err != nil {
 		return err
 	}
@@ -153,12 +154,13 @@ func Regist(c echo.Context) error {
 	password := c.QueryParam("password")
 	level := c.QueryParam("level")
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s'", userinfoTableName_, username))
+	err := user_info.Select(&ans, "select * from ? where username like ?", userinfoTableName_, username)
 	if err != nil || len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
 	hashText := get_hash(password)
-	_, err = user_info.Exec(fmt.Sprintf("insert into %s values('%s','%x',%s,%s)", userinfoTableName_, username, hashText, level, "0"))
+	stmt, err := user_info.Prepare("insert into ? values(?,?,?,0)")
+	_, err = stmt.Exec(userinfoTableName_, username, hashText, level)
 	if err != nil {
 		return err
 	}
