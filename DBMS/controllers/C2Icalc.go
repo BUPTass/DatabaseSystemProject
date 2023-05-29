@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
 	"github.com/gonum/stat/distuv"
@@ -10,24 +9,20 @@ import (
 )
 
 type tbC2Inew struct {
-	SCell    string
-	NCell    string
-	meanRSRP float32
-	stdRSRP  float32
-	P9       float32
-	P6       float32
+	SCELL    string  `db:"SCELL"`
+	NCELL    string  `db:"NCELL"`
+	RSRPmean int     `db:"RSRPmean"`
+	RSRPstd  int     `db:"RSRPstd"`
+	PrbC2I9  float32 `db:"PrbC2I9"`
+	PrbABS6  float32 `db:"PrbABS6"`
 }
-type tbMROData struct {
-	TimeStamp         string
-	ServingSector     string
-	InterferingSector string
-	LteScRSRP         float32
-	LteNcRSRP         float32
-	LteNcEarfcn       int
-	LteNcPci          int
+type tbC2I3 struct {
+	a string `db:"a"`
+	b string `db:"b"`
+	c string `db:"c"`
 }
 
-func C2Icalc(c echo.Context) error {
+func C2InewCalc(c echo.Context) error {
 	//param
 	minC := c.QueryParam("min")
 	type dataTMP struct {
@@ -56,12 +51,16 @@ func C2Icalc(c echo.Context) error {
 	var tableName string
 	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2Inew").Scan(&tableName)
 	if err == sql.ErrNoRows {
-		createTableStmt := "CREATE TABLE 'tbC2Inew' ('SCELL' nvarchar(255),'NCELL' nvarchar(255),'RSRPmean' float,'RSRPstd' float,'PrbC2I9' float,'PrbABS6' float,PRIMARY KEY ('SCELL','NCELL'));"
+		createTableStmt := "CREATE TABLE tbC2Inew ('SCELL' nvarchar(255),'NCELL' nvarchar(255),'RSRPmean' float,'RSRPstd' float,'PrbC2I9' float,'PrbABS6' float,PRIMARY KEY ('SCELL','NCELL'));"
 		_, err = db.Exec(createTableStmt)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-	} else if err == nil {
+	} else if err != nil {
+		return err
+	}
+	if err == nil {
+		db.Exec("delete from tbC2Inew")
 		insertStmt, err := db.Prepare("insert into tbC2Inew values(?,?,?,?,?,?)")
 		if err != nil {
 			return err
@@ -75,6 +74,71 @@ func C2Icalc(c echo.Context) error {
 		}
 	} else {
 		return err
+	}
+	return c.String(http.StatusOK, "success")
+}
+func C2I3Calc(c echo.Context) error {
+	x := c.QueryParam("x")
+	//检查表tbC2Inew是否存在
+	var tableName string
+	err := db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2Inew").Scan(&tableName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.String(http.StatusOK, "tbC2Inew not exist, please calculate tbC2Inew first")
+		}
+		return err
+	}
+	//检查表tbC2I3是否存在
+	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2I3").Scan(&tableName)
+	if err == sql.ErrNoRows {
+		createTableStmt := "CREATE TABLE tbC2I3 ('a' nvarchar(255),'b' nvarchar(255),'c' nvarchar(255),PRIMARY KEY ('a','b','c'));"
+		_, err = db.Exec(createTableStmt)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		db.Exec("delete from tbC2I3")
+	}
+	//计算三元组
+	var tbnew []tbC2Inew
+	err = db.Select(&tbnew, "select * from tbC2Inew")
+	if err != nil {
+		return err
+	}
+	var tb3tmp []tbC2I3
+	SelectStmt := "select A.SCELL as a,B.SCELL as b,C.SCELL as c from (tbC2Inew as A right join tbC2Inew as B on A.NCELL = B.SCELL) right join tbC2Inew as C on B.NCELL = C.SCELL and (C.NCELL = A.SCELL or A.NCELL = C.SCELL) where A.PrbABS6 >= ? and B.PrbABS6 >= ? and C.PrbABS6 >= ?"
+	err = db.Select(&tb3tmp, SelectStmt, x, x, x)
+	if err != nil {
+		return err
+	}
+	//去重
+	var s map[tbC2I3]bool
+	for i := 0; i < len(tb3tmp); i++ {
+		if tb3tmp[i].a > tb3tmp[i].b {
+			tmp := tb3tmp[i].a
+			tb3tmp[i].a = tb3tmp[i].b
+			tb3tmp[i].b = tmp
+		}
+		if tb3tmp[i].b > tb3tmp[i].c {
+			tmp := tb3tmp[i].b
+			tb3tmp[i].b = tb3tmp[i].c
+			tb3tmp[i].c = tmp
+		}
+		if tb3tmp[i].a > tb3tmp[i].b {
+			tmp := tb3tmp[i].a
+			tb3tmp[i].a = tb3tmp[i].b
+			tb3tmp[i].b = tmp
+		}
+		s[tb3tmp[i]] = true
+	}
+	insertStmt, err := db.Prepare("insert into tbC2I3 values(?,?,?)")
+	for k, _ := range s {
+		_, err = insertStmt.Exec(k.a, k.b, k.c)
+		if err != nil {
+			return err
+		}
 	}
 	return c.String(http.StatusOK, "success")
 }
