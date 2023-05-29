@@ -122,7 +122,7 @@ func AddUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//change user conformed to 1
-	stmt, err := user_info.Prepare("update ? set conformed = 1 where username like ?")
+	stmt, _ := user_info.Prepare("update ? set conformed = 1 where username like ?")
 	_, err = stmt.Exec(userinfoTableName_, uname)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func DeleteUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//delete normal user:uname
-	stmt, err := user_info.Prepare("delete from ? where username like ? and level = 1")
+	stmt, _ := user_info.Prepare("delete from ? where username like ? and level = 1")
 	_, err = stmt.Exec(userinfoTableName_, uname)
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func Regist(c echo.Context) error {
 		return c.String(http.StatusOK, "username exist")
 	}
 	hashText := get_hash(password)
-	stmt, err := user_info.Prepare("insert into ? values(?,?,?,0)")
+	stmt, _ := user_info.Prepare("insert into ? values(?,?,?,0)")
 	_, err = stmt.Exec(userinfoTableName_, username, hashText, level)
 	if err != nil {
 		return err
