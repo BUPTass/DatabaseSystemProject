@@ -114,7 +114,7 @@ func C2I3Calc(c echo.Context) error {
 		return err
 	}
 	//去重
-	var s map[tbC2I3]bool
+	s := make(map[tbC2I3]bool)
 	for i := 0; i < len(tb3tmp); i++ {
 		if tb3tmp[i].a > tb3tmp[i].b {
 			tmp := tb3tmp[i].a
@@ -134,8 +134,15 @@ func C2I3Calc(c echo.Context) error {
 		s[tb3tmp[i]] = true
 	}
 	insertStmt, err := db.Prepare("insert into tbC2I3 values(?,?,?)")
-	for k, _ := range s {
+	if err != nil {
+		return err
+	}
+	for k, v := range s {
+		if !v {
+			return c.String(http.StatusOK, "dynamic error")
+		}
 		_, err = insertStmt.Exec(k.a, k.b, k.c)
+
 		if err != nil {
 			return err
 		}
