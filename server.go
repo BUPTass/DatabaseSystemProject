@@ -2,12 +2,15 @@ package main
 
 import (
 	"DatabaseSystemProject/Auth"
+	"DatabaseSystemProject/Export"
 	"DatabaseSystemProject/Import"
+	"database/sql"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"log"
 	"net/http"
 )
 
@@ -20,13 +23,20 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Database System Project API backend")
 	})
+	// Connect to the MySQL database.
+	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	defer db.Close()
+	e.Static("/download", "static")
 	e.POST("/import/tbCell", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbCell(path)
+		err := Import.AddtbCell(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -39,7 +49,7 @@ func main() {
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbKPI(path)
+		err := Import.AddtbKPI(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -52,7 +62,7 @@ func main() {
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbRPB(path)
+		err := Import.AddtbRPB(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -65,11 +75,25 @@ func main() {
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbMROData(path)
+		err := Import.AddtbMROData(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
 			return c.String(http.StatusOK, "New tbMROData Added")
+		}
+	})
+	e.GET("/export", func(c echo.Context) error {
+		path := c.FormValue("path")
+		table := c.FormValue("table")
+
+		if len(table) == 0 {
+			return c.String(http.StatusBadRequest, "Missing table")
+		}
+		ret, err := Export.TableAsCSV(db, path, table)
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		} else {
+			return c.String(http.StatusOK, ret)
 		}
 	})
 

@@ -90,18 +90,11 @@ type MROData struct {
 	LteNcPci          int16   `db:"LteNcPci"`          // 干扰小区PCI
 }
 
-func AddtbCell(path string) error {
+func AddtbCell(db *sql.DB, path string) error {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return err
 	}
-	// Connect to the MySQL database.
-	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
-	if err != nil {
-		log.Println("Error connecting to database:", err)
-		return err
-	}
-	defer db.Close()
 
 	var errorList []string
 	executed := false
@@ -281,18 +274,11 @@ func AddtbCell(path string) error {
 	}
 }
 
-func AddtbKPI(path string) error {
+func AddtbKPI(db *sql.DB, path string) error {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return err
 	}
-	// Connect to the MySQL database.
-	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
-	if err != nil {
-		log.Println("Error connecting to database:", err)
-		return err
-	}
-	defer db.Close()
 
 	var errorList []string
 	executed := false
@@ -493,18 +479,11 @@ func AddtbKPI(path string) error {
 	}
 }
 
-func AddtbRPB(path string) error {
+func AddtbRPB(db *sql.DB, path string) error {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return err
 	}
-	// Connect to the MySQL database.
-	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
-	if err != nil {
-		log.Println("Error connecting to database:", err)
-		return err
-	}
-	defer db.Close()
 
 	var errorList []string
 	executed := false
@@ -839,19 +818,12 @@ func AddtbRPB(path string) error {
 	}
 }
 
-func AddtbMROData(path string) error {
+func AddtbMROData(db *sql.DB, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	// Connect to the MySQL database.
-	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
-	if err != nil {
-		log.Println("Error connecting to database:", err)
-		return err
-	}
-	defer db.Close()
 
 	ch := processCSV(file)
 
