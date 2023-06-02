@@ -4,6 +4,7 @@ import (
 	"DatabaseSystemProject/Auth"
 	"DatabaseSystemProject/Export"
 	"DatabaseSystemProject/Import"
+	"DatabaseSystemProject/Query"
 	"database/sql"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -56,13 +57,13 @@ func main() {
 			return c.String(http.StatusOK, "New tbKPI Added")
 		}
 	})
-	e.POST("/import/tbRPB", func(c echo.Context) error {
+	e.POST("/import/tbPRB", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbRPB(db, path)
+		err := Import.AddtbPRB(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -108,6 +109,70 @@ func main() {
 			return c.NoContent(http.StatusBadGateway)
 		} else {
 			return c.String(http.StatusOK, filename)
+		}
+	})
+
+	e.GET("/query/sector_name", func(c echo.Context) error {
+		jsonByte, err := Query.GetAllSectorNames(db)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+	e.GET("/query/tbCell", func(c echo.Context) error {
+		query := c.FormValue("sector")
+		jsonByte, err := Query.GetCellInfo(db, query)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+
+	e.GET("/query/enodeb_name", func(c echo.Context) error {
+		jsonByte, err := Query.GetAllEnodebNames(db)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+	e.GET("/query/enodeb", func(c echo.Context) error {
+		query := c.FormValue("enodeb")
+		jsonByte, err := Query.GetEnodeb(db, query)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+
+	e.GET("/query/kpi/sector_name", func(c echo.Context) error {
+		jsonByte, err := Query.GetKPISectorNames(db)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+	e.GET("/query/kpi", func(c echo.Context) error {
+		query := c.FormValue("sector")
+		jsonByte, err := Query.GetKPIInfoBySectorName(db, query)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, jsonByte)
+		}
+	})
+
+	e.GET("/query/tbPRBNew/gen", func(c echo.Context) error {
+		path := c.FormValue("path")
+		ret, err := Query.GeneratePRBNewTable(db, path)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.String(http.StatusOK, ret)
 		}
 	})
 

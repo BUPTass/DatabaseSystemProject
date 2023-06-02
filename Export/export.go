@@ -113,6 +113,6 @@ func TableAsCSV(db *sql.DB, outputPath, tableName string) (string, error) {
 	if isDefault {
 		return "/download/" + randomName, nil
 	} else {
-		return randomName, nil
+		return outputPath + " saved!", nil
 	}
 }

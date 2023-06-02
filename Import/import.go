@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CellValues struct {
@@ -235,6 +236,8 @@ func AddtbCell(db *sql.DB, path string) error {
 			if err != nil {
 				log.Println("Error executing batch insertion:", err)
 				errorList = append(errorList, err.Error())
+				// Fallback to single insertion when bulk insertion failed
+				errorList = singleInsertion(db, values, statementPre, 19, errorList)
 			}
 			values = values[:0] // Clear the batch
 		}
@@ -248,24 +251,7 @@ func AddtbCell(db *sql.DB, path string) error {
 	}
 
 	// Insert the remaining values in the batch
-	if len(values) > 0 {
-		statement := fmt.Sprintf(statementPre, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-		stmt, err = db.Prepare(statement)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer stmt.Close()
-
-		for len(values) > 0 {
-			_, err = stmt.Exec(values[0:19]...)
-			if err != nil {
-				log.Println("Error executing insertion:", err)
-				errorList = append(errorList, err.Error())
-			}
-			values = values[19:]
-		}
-	}
+	errorList = singleInsertion(db, values, statementPre, 19, errorList)
 
 	if len(errorList) > 0 {
 		return errors.New(strings.Join(errorList, "\n"))
@@ -368,10 +354,18 @@ func AddtbKPI(db *sql.DB, path string) error {
 				row = append(row, "")
 			}
 		}
-		// Extract the cell values from the row.
 
+		layout := "01/02/2006 15:04:05" // The layout represents the format of the input string
+		parsedTime, err := time.Parse(layout, row[0])
+		if err != nil {
+			log.Println(err)
+			errorList = append(errorList, err.Error())
+			continue
+		}
+
+		// Extract the cell values from the row.
 		cellValues := []interface{}{
-			row[0],
+			parsedTime,
 			row[1],
 			row[2],
 			row[3],
@@ -439,6 +433,8 @@ func AddtbKPI(db *sql.DB, path string) error {
 			if err != nil {
 				log.Println("Error executing batch insertion:", err)
 				errorList = append(errorList, err.Error())
+				// Fallback to single insertion when bulk insertion failed
+				errorList = singleInsertion(db, values, statementPre, 41, errorList)
 			}
 			values = values[:0] // Clear the batch
 		}
@@ -452,25 +448,7 @@ func AddtbKPI(db *sql.DB, path string) error {
 	}
 
 	// Insert the remaining values in the batch
-	if len(values) > 0 {
-		statement := fmt.Sprintf(statementPre, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "+
-			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-		stmt, err = db.Prepare(statement)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer stmt.Close()
-
-		for len(values) > 0 {
-			_, err = stmt.Exec(values[0:41]...)
-			if err != nil {
-				log.Println("Error executing insertion:", err)
-				errorList = append(errorList, err.Error())
-			}
-			values = values[41:]
-		}
-	}
+	errorList = singleInsertion(db, values, statementPre, 41, errorList)
 
 	if len(errorList) > 0 {
 		return errors.New(strings.Join(errorList, "\n"))
@@ -479,7 +457,7 @@ func AddtbKPI(db *sql.DB, path string) error {
 	}
 }
 
-func AddtbRPB(db *sql.DB, path string) error {
+func AddtbPRB(db *sql.DB, path string) error {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return err
@@ -500,7 +478,7 @@ func AddtbRPB(db *sql.DB, path string) error {
 		PRB50, PRB51, PRB52, PRB53, PRB54, PRB55, PRB56, PRB57, PRB58, PRB59,
 		PRB60, PRB61, PRB62, PRB63, PRB64, PRB65, PRB66, PRB67, PRB68, PRB69,
 		PRB70, PRB71, PRB72, PRB73, PRB74, PRB75, PRB76, PRB77, PRB78, PRB79,
-		 PRB80, PRB81, PRB82, PRB83, PRB84, PRB85, PRB86, PRB87, PRB88, PRB89,
+		PRB80, PRB81, PRB82, PRB83, PRB84, PRB85, PRB86, PRB87, PRB88, PRB89,
 		PRB90, PRB91, PRB92, PRB93, PRB94, PRB95, PRB96, PRB97, PRB98, PRB99)
 	VALUES %s
 	ON DUPLICATE KEY UPDATE
@@ -612,8 +590,8 @@ func AddtbRPB(db *sql.DB, path string) error {
 
 	count := 0
 	// Define the batch size
-	batchSize := 20
-	values := make([]interface{}, 0, batchSize*104) // 41 is the number of columns in the table
+	batchSize := 50
+	values := make([]interface{}, 0, batchSize*104) // 104 is the number of columns in the table
 
 	// Read only the 1st sheet
 	sheet := f.GetSheetName(0)
@@ -638,10 +616,16 @@ func AddtbRPB(db *sql.DB, path string) error {
 				row = append(row, "")
 			}
 		}
-
+		layout := "01/02/2006 15:04:05" // The layout represents the format of the input string
+		parsedTime, err := time.Parse(layout, row[0])
+		if err != nil {
+			log.Println(err)
+			errorList = append(errorList, err.Error())
+			continue
+		}
 		// Extract the cell values from the row.
 		cellValues := []interface{}{
-			row[0],
+			parsedTime,
 			row[1],
 			row[2],
 			row[3],
@@ -775,6 +759,8 @@ func AddtbRPB(db *sql.DB, path string) error {
 			if err != nil {
 				log.Println("Error executing batch insertion:", err)
 				errorList = append(errorList, err.Error())
+				// Fallback to single insertion when bulk insertion failed
+				errorList = singleInsertion(db, values, statementPre, 104, errorList)
 			}
 			values = values[:0] // Clear the batch
 		}
@@ -788,28 +774,7 @@ func AddtbRPB(db *sql.DB, path string) error {
 	}
 
 	// Insert the remaining values in the batch
-	if len(values) > 0 {
-		statement := fmt.Sprintf(statementPre, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"+
-			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"+
-			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"+
-			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"+
-			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-		stmt, err = db.Prepare(statement)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer stmt.Close()
-
-		for len(values) > 0 {
-			_, err = stmt.Exec(values[0:104]...)
-			if err != nil {
-				log.Println("Error executing insertion:", err)
-				errorList = append(errorList, err.Error())
-			}
-			values = values[104:]
-		}
-	}
+	errorList = singleInsertion(db, values, statementPre, 104, errorList)
 
 	if len(errorList) > 0 {
 		return errors.New(strings.Join(errorList, "\n"))
@@ -881,7 +846,7 @@ func AddtbMROData(db *sql.DB, path string) error {
 		values = append(values, cellValues...)
 
 		// If the batch size is reached, execute the batch insertion
-		if len(values) == batchSize*19 {
+		if len(values) == batchSize*7 {
 			if !executed {
 				statement := fmt.Sprintf(statementPre, strings.Join(valueStrings, ","))
 				stmt, err = db.Prepare(statement)
@@ -896,6 +861,8 @@ func AddtbMROData(db *sql.DB, path string) error {
 			if err != nil {
 				log.Println("Error executing batch insertion:", err)
 				errorList = append(errorList, err.Error())
+				// Fallback to single insertion when bulk insertion failed
+				errorList = singleInsertion(db, values, statementPre, 7, errorList)
 			}
 			values = values[:0] // Clear the batch
 		}
@@ -906,24 +873,7 @@ func AddtbMROData(db *sql.DB, path string) error {
 	}
 
 	// Insert the remaining values in the batch
-	if len(values) > 0 {
-		statement := fmt.Sprintf(statementPre, "(?, ?, ?, ?, ?, ?, ?)")
-		stmt, err = db.Prepare(statement)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer stmt.Close()
-
-		for len(values) > 0 {
-			_, err = stmt.Exec(values[0:7]...)
-			if err != nil {
-				log.Println("Error executing insertion:", err)
-				errorList = append(errorList, err.Error())
-			}
-			values = values[7:]
-		}
-	}
+	errorList = singleInsertion(db, values, statementPre, 7, errorList)
 
 	if len(errorList) > 0 {
 		return errors.New(strings.Join(errorList, "\n"))
@@ -934,11 +884,11 @@ func AddtbMROData(db *sql.DB, path string) error {
 
 func processCSV(rc io.Reader) (ch chan []string) {
 	// 8 channels in total
-	// approximately 8-threaded stream reading
+	// Approximately 8-threaded stream reading
 	ch = make(chan []string, 8)
 	go func() {
 		r := csv.NewReader(rc)
-		if _, err := r.Read(); err != nil { //read header
+		if _, err := r.Read(); err != nil { // Read header and ignore
 			log.Println(err)
 		}
 		defer close(ch)
@@ -954,4 +904,43 @@ func processCSV(rc io.Reader) (ch chan []string) {
 		}
 	}()
 	return
+}
+
+func singleInsertion(db *sql.DB, values []interface{}, statementPre string, pCount int, errorList []string) []string {
+	if len(values) > 0 {
+		statement := fmt.Sprintf(statementPre, generatePattern(pCount))
+		stmt, err := db.Prepare(statement)
+		if err != nil {
+			log.Println(err)
+			errorList = append(errorList, err.Error())
+			return errorList
+		}
+		defer stmt.Close()
+
+		for len(values) > 0 {
+			_, err = stmt.Exec(values[0:pCount]...)
+			if err != nil {
+				log.Println("Error executing insertion:", err)
+				errorList = append(errorList, err.Error())
+			}
+			values = values[pCount:]
+		}
+	}
+	return errorList
+}
+
+func generatePattern(pCount int) string {
+	// Create a slice of "?" strings with length pCount
+	placeholders := make([]string, pCount)
+	for i := 0; i < pCount; i++ {
+		placeholders[i] = "?"
+	}
+
+	// Join the "?" strings with ", " separator
+	pattern := strings.Join(placeholders, ", ")
+
+	// Enclose the pattern with parentheses
+	pattern = "(" + pattern + ")"
+
+	return pattern
 }

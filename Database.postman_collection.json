@@ -1,0 +1,435 @@
+{
+	"info": {
+		"_postman_id": "a13e8c35-909b-49a6-bb9f-e0e01284c1b4",
+		"name": "Database",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "import",
+			"item": [
+				{
+					"name": "Import tbCell",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/import/tbCell?path=/root/DatabaseSystemProject/upload1685550068102912982.xlsx",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"import",
+								"tbCell"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/root/DatabaseSystemProject/upload1685550068102912982.xlsx"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import tbPRB",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/import/tbPRB?path=/root/DatabaseSystemProject/upload/1685628556449899737.xlsx",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"import",
+								"tbPRB"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/root/DatabaseSystemProject/upload/1685628556449899737.xlsx"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import tbKPI",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/import/tbKPI?path=/root/DatabaseSystemProject/upload/1685603681108737701.xlsx",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"import",
+								"tbKPI"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/root/DatabaseSystemProject/upload/1685603681108737701.xlsx"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import tbMROData",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/import/tbMROData?path=/root/DatabaseSystemProject/upload/1685629940889282602.csv",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"import",
+								"tbMROData"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/root/DatabaseSystemProject/upload/1685629940889282602.csv"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Query",
+			"item": [
+				{
+					"name": "Get All sector name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/sector_name",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"sector_name"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query tbCell by sector name or sector id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/tbCell?sector=1142",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"tbCell"
+							],
+							"query": [
+								{
+									"key": "sector",
+									"value": "1142"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All enodeb name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/enodeb_name",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"enodeb_name"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query tbEnodeB by enodeb name or enodeb id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/enodeb?enodeb=253822",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"enodeb"
+							],
+							"query": [
+								{
+									"key": "enodeb",
+									"value": "253822"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All sector name in tbKPI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/kpi/sector_name",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"kpi",
+								"sector_name"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query tbKPI by sector name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/kpi?sector=B马质检局-HLHF-3",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"kpi"
+							],
+							"query": [
+								{
+									"key": "sector",
+									"value": "B马质检局-HLHF-3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate tbPRBNew",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/tbPRBNew/gen?path",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"tbPRBNew",
+								"gen"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Export table",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/export?table=tbKPI&path=/tmp",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"export"
+					],
+					"query": [
+						{
+							"key": "table",
+							"value": "tbKPI"
+						},
+						{
+							"key": "path",
+							"value": "/tmp"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload Files",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/Administrator/Desktop/01-1-xxx地区TD-LTE网络数据-2020-09-03/9. tbMROData.csv"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{URL}}/upload",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Signup",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/auth/signup?username=admin&password=admin",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"auth",
+						"signup"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "admin"
+						},
+						{
+							"key": "password",
+							"value": "admin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"protocolProfileBehavior": {
+				"followRedirects": false
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/auth/login?username=admin&password=admin",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "admin"
+						},
+						{
+							"key": "password",
+							"value": "admin"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/auth/logout",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"auth",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "digest",
+		"digest": [
+			{
+				"key": "algorithm",
+				"value": "MD5",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL",
+			"value": "http://116.63.163.97:1333",
+			"type": "default"
+		}
+	]
+}
