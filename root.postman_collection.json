@@ -1,0 +1,353 @@
+{
+	"info": {
+		"_postman_id": "bdee1333-9c22-4644-819f-c3a107a37cb6",
+		"name": "root",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27782248"
+	},
+	"item": [
+		{
+			"name": "user management",
+			"item": [
+				{
+					"name": "admin only",
+					"item": [
+						{
+							"name": "add user",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{root}}/add/user?username=test1",
+									"host": [
+										"{{root}}"
+									],
+									"path": [
+										"add",
+										"user"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "test1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{root}}/show/users",
+									"host": [
+										"{{root}}"
+									],
+									"path": [
+										"show",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete user",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{root}}/delete/user?username=test2",
+									"host": [
+										"{{root}}"
+									],
+									"path": [
+										"delete",
+										"user"
+									],
+									"query": [
+										{
+											"key": "username",
+											"value": "test2"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/login?username=root&password=1594568520",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "root"
+								},
+								{
+									"key": "password",
+									"value": "1594568520"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/logout",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "regist",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/regist?username=test2&password=222222&level=0",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"regist"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test2"
+								},
+								{
+									"key": "password",
+									"value": "222222"
+								},
+								{
+									"key": "level",
+									"value": "0",
+									"description": "0 or 1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "database management",
+			"item": [
+				{
+					"name": "database info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/manage/databaseInfo?item=variables&condition=innodb_buffer_pool_size",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"manage",
+								"databaseInfo"
+							],
+							"query": [
+								{
+									"key": "item",
+									"value": "variables"
+								},
+								{
+									"key": "condition",
+									"value": "innodb_buffer_pool_size",
+									"description": "\"databaseinfo\" or \"\" or others"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "database connection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/manage/databaseConnection?condition=ip",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"manage",
+								"databaseConnection"
+							],
+							"query": [
+								{
+									"key": "condition",
+									"value": "ip",
+									"description": "ip or user or list"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "change database",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/manage/database?item=innodb_buffer_pool_size&value=8388608",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"manage",
+								"database"
+							],
+							"query": [
+								{
+									"key": "item",
+									"value": "innodb_buffer_pool_size"
+								},
+								{
+									"key": "value",
+									"value": "8388608"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3.6 3.7 3.8",
+			"item": [
+				{
+					"name": "3.6",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/calc/C2Inew?min=5",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"calc",
+								"C2Inew"
+							],
+							"query": [
+								{
+									"key": "min",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.7",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/calc/C2I3?x=0.5",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"calc",
+								"C2I3"
+							],
+							"query": [
+								{
+									"key": "x",
+									"value": "0.5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3.8",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{root}}/calc/MRO?filePath=.",
+							"host": [
+								"{{root}}"
+							],
+							"path": [
+								"calc",
+								"MRO"
+							],
+							"query": [
+								{
+									"key": "filePath",
+									"value": "."
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "root",
+			"value": "http://47.98.134.95:1323",
+			"type": "string"
+		}
+	]
+}
