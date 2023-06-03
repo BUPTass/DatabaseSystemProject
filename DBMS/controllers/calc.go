@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"github.com/gonum/stat/distuv"
 	"github.com/labstack/echo/v4"
@@ -175,9 +176,119 @@ func C2I3Calc(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, ans)
 }
+func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table sync.Map, err sync.Map) {
+	defer wg.Done()
+	//提取xml文件信息
+	type XMLdata struct {
+		ENBid      xml.Name `xml:"eNB"`
+		Mesurement []struct {
+			Smr    string   `xml:"smr"`
+			Object []string `xml:"v"`
+		} `xml:"mesurement"`
+	}
+	XMLdecoder := xml.NewDecoder(reader)
+	data := XMLdata{}
+	nowerr := XMLdecoder.Decode(&data)
+	if nowerr != nil {
+		log.Println(nowerr.Error())
+		err.Store(nowerr, true)
+	}
+	type Result struct {
+		Id      int
+		SPci    int
+		NPci    int
+		NEarfcn int
+		SRSRP   int
+		NRSRP   int
+	}
+	minlen := len(data.Mesurement[0].Object)
+	for _, i := range data.Mesurement {
+		if minlen < len(i.Object) {
+			minlen = len(i.Object)
+		}
+	}
+	var result []Result
+	for i := 0; i < minlen; i++ {
+		tmp := Result{}
+		for _, j := range data.Mesurement {
+			if j.Smr == "MR.LteScPci" {
+				tmp.SPci, _ = strconv.Atoi(j.Object[i])
+			} else if j.Smr == "MR.LteNcPci" {
+				tmp.NPci, _ = strconv.Atoi(j.Object[i])
+			} else if j.Smr == "MR.LteNcEarfcn" {
+				tmp.NEarfcn, _ = strconv.Atoi(j.Object[i])
+			} else if j.Smr == "MR.LteScRSRP" {
+				tmp.SRSRP, _ = strconv.Atoi(j.Object[i])
+			} else if j.Smr == "MR.LteNcRSRP" {
+				tmp.NRSRP, _ = strconv.Atoi(j.Object[i])
+			} else if j.Smr == "eNBid" {
+				tmp.Id, _ = strconv.Atoi(j.Object[i])
+			}
+		}
+		result = append(result, tmp)
+	}
+	//获取主临小区ID
+	for _, i := range result {
+		if v, ok := idtable.Load(i.SPci); ok && v == "" {
+			var Sid []string
+			nowerr = db.Select(&Sid, "select SECTOR_ID from tbCell where PCI = ?", i.SPci)
+			if nowerr != nil {
+				log.Println(nowerr.Error())
+				err.Store(nowerr, true)
+			}
+			if len(Sid) != 1 {
+				idtable.Store(i.SPci, "error")
+				continue
+			} else {
+				idtable.Store(i.SPci, Sid[0])
+			}
+		}
+		if v, ok := idtable.Load(i.NPci); ok && v == "" {
+			var Nid []string
+			nowerr = db.Select(&Nid, "select SECTOR_ID from tbCell where PCI = ?", i.NPci)
+			if nowerr != nil {
+				log.Println(nowerr.Error())
+				err.Store(nowerr, true)
+			}
+			if len(Nid) != 1 {
+				idtable.Store(i.NPci, "error")
+				continue
+			}
+			idtable.Store(i.NPci, Nid[0])
+		}
+	}
+	//过滤
+	var EarfcnList []int
+	Earfcn := make(map[int]bool)
+	nowerr = db.Select(&EarfcnList, "select distinct EARFCN from tbCell")
+	if nowerr != nil {
+		log.Println(nowerr.Error())
+		err.Store(nowerr, true)
+	}
+	for _, i := range EarfcnList {
+		Earfcn[i] = true
+	}
+	var tmp tbMRODatanew
+	for _, i := range result {
+		Sv, _ := idtable.Load(i.SPci)
+		Sid := Sv.(string)
+		Nv, _ := idtable.Load(i.NPci)
+		Nid := Nv.(string)
+		if i.NPci < 0 || i.NPci > 503 || i.NRSRP < 0 || i.NRSRP > 97 || i.SRSRP < 0 || i.SRSRP > 97 || !Earfcn[i.NEarfcn] || Sid == "" || Sid == "error" || Nid == "" || Nid == "error" {
+			continue
+		}
+		tmp.MroID = i.Id
+		tmp.ServingSector = Sid
+		tmp.InterferingSector = Nid
+		tmp.LteScRSRP = i.SRSRP
+		tmp.LteNcRSRP = i.NRSRP
+		tmp.LteNcEarfcn = i.NEarfcn
+		tmp.LteNcPci = i.NPci
+		table.Store(tmp, true)
+	}
+}
 func MROMREcalc(c echo.Context) error {
 	filePath := c.QueryParam("filePath")
-
 	//step1
 	var files []fs.DirEntry
 	filesTmp, err := os.ReadDir(filePath)
@@ -193,132 +304,6 @@ func MROMREcalc(c echo.Context) error {
 			if res {
 				files = append(files, file)
 			}
-		}
-	}
-	var table []tbMRODatanew
-	//step2
-	for _, file := range files {
-		//解压
-		gzFile, err := os.Open(filePath + "\\" + file.Name())
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		defer gzFile.Close()
-		reader, err := gzip.NewReader(gzFile)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		defer reader.Close()
-		//提取xml文件信息
-		type XMLdata struct {
-			ENBid      xml.Name `xml:"eNB"`
-			Mesurement []struct {
-				Smr    string   `xml:"smr"`
-				Object []string `xml:"v"`
-			} `xml:"mesurement"`
-		}
-		XMLdecoder := xml.NewDecoder(reader)
-		data := XMLdata{}
-		err = XMLdecoder.Decode(&data)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-		type Result struct {
-			Id      int
-			SPci    int
-			NPci    int
-			NEarfcn int
-			SRSRP   int
-			NRSRP   int
-		}
-		minlen := len(data.Mesurement[0].Object)
-		for _, i := range data.Mesurement {
-			if minlen < len(i.Object) {
-				minlen = len(i.Object)
-			}
-		}
-		var result []Result
-		for i := 0; i < minlen; i++ {
-			tmp := Result{}
-			for _, j := range data.Mesurement {
-				if j.Smr == "MR.LteScPci" {
-					tmp.SPci, _ = strconv.Atoi(j.Object[i])
-				} else if j.Smr == "MR.LteNcPci" {
-					tmp.NPci, _ = strconv.Atoi(j.Object[i])
-				} else if j.Smr == "MR.LteNcEarfcn" {
-					tmp.NEarfcn, _ = strconv.Atoi(j.Object[i])
-				} else if j.Smr == "MR.LteScRSRP" {
-					tmp.SRSRP, _ = strconv.Atoi(j.Object[i])
-				} else if j.Smr == "MR.LteNcRSRP" {
-					tmp.NRSRP, _ = strconv.Atoi(j.Object[i])
-				} else if j.Smr == "eNBid" {
-					tmp.Id, _ = strconv.Atoi(j.Object[i])
-				}
-			}
-			result = append(result, tmp)
-		}
-		//获取主临小区ID
-		Idtable := make(map[int]string)
-		if err != nil {
-			log.Println(err.Error())
-			return err
-		}
-		for _, i := range result {
-			if Idtable[i.SPci] == "" {
-				var Sid []string
-				err = db.Select(&Sid, "select SECTOR_ID from tbCell where PCI = ?", i.SPci)
-				if err != nil {
-					log.Println(err.Error())
-					return err
-				}
-				if len(Sid) != 1 {
-					Idtable[i.SPci] = "error"
-					continue
-				} else {
-					Idtable[i.SPci] = Sid[0]
-				}
-			}
-			if Idtable[i.NPci] == "" {
-				var Nid []string
-				err = db.Select(&Nid, "select SECTOR_ID from tbCell where PCI = ?", i.NPci)
-				if err != nil {
-					log.Println(err.Error())
-					return err
-				}
-				if len(Nid) != 1 {
-					Idtable[i.NPci] = "error"
-					continue
-				}
-				Idtable[i.NPci] = Nid[0]
-			}
-		}
-		//过滤
-		var EarfcnList []int
-		Earfcn := make(map[int]bool)
-		err = db.Select(&EarfcnList, "select distinct EARFCN from tbCell")
-		if err != nil {
-			log.Println(err.Error())
-			return err
-		}
-		for _, i := range EarfcnList {
-			Earfcn[i] = true
-		}
-		var tmp tbMRODatanew
-		for _, i := range result {
-			if i.NPci < 0 || i.NPci > 503 || i.NRSRP < 0 || i.NRSRP > 97 || i.SRSRP < 0 || i.SRSRP > 97 || !Earfcn[i.NEarfcn] || Idtable[i.SPci] == "" || Idtable[i.SPci] == "error" || Idtable[i.NPci] == "" || Idtable[i.NPci] == "error" {
-				continue
-			}
-			tmp.MroID = i.Id
-			tmp.ServingSector = Idtable[i.SPci]
-			tmp.InterferingSector = Idtable[i.NPci]
-			tmp.LteScRSRP = i.SRSRP
-			tmp.LteNcRSRP = i.NRSRP
-			tmp.LteNcEarfcn = i.NEarfcn
-			tmp.LteNcPci = i.NPci
-			table = append(table, tmp)
 		}
 	}
 	//检查表tbMROdatanew是否存在
@@ -337,19 +322,49 @@ func MROMREcalc(c echo.Context) error {
 	} else {
 		db.Exec("delete from tbMROdatanew")
 	}
+	//step2
+	table := sync.Map{}
+	idtable := sync.Map{}
+	errs := sync.Map{}
+	var wg sync.WaitGroup
+	for _, file := range files {
+		//解压
+		gzFile, err := os.Open(filePath + "\\" + file.Name())
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		defer gzFile.Close()
+		reader, err := gzip.NewReader(gzFile)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		defer reader.Close()
+		wg.Add(1)
+		go XmlLifting(&wg, reader, idtable, table, errs)
+	}
+	wg.Wait()
+	_, err = db.Exec("alter table tbMROdatanew partition by hash(`ServingSector`)")
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
 	//写入数据库
 	insertStmt, err := db.Prepare("insert into tbMROdatanew values(?,?,?,?,?,?,?)")
 	if err != nil {
 		log.Println(err.Error())
 		return err
 	} else {
-		for _, i := range table {
+		table.Range(func(key, value interface{}) bool {
+			i := key.(tbMRODatanew)
 			_, err = insertStmt.Exec(i.MroID, i.ServingSector, i.InterferingSector, i.LteScRSRP, i.LteNcRSRP, i.LteNcEarfcn, i.LteNcPci)
 			if err != nil {
 				log.Println(err.Error())
-				return err
+				return false
 			}
-		}
+			return true
+		})
 	}
 	return c.String(http.StatusOK, "success")
 }
