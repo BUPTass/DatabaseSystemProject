@@ -19,6 +19,112 @@ type Enodeb struct {
 	Style      string  `json:"style"`
 }
 
+type PRBNewData struct {
+	SECTOR_NAME      string  `json:"SECTOR_NAME"`
+	Hour             string  `json:"StartTime"`
+	PRB_Interference float32 `json:"PRB_Interference"`
+	PRB00            float32 `json:"PRB00"`
+	PRB01            float32 `json:"PRB01"`
+	PRB02            float32 `json:"PRB02"`
+	PRB03            float32 `json:"PRB03"`
+	PRB04            float32 `json:"PRB04"`
+	PRB05            float32 `json:"PRB05"`
+	PRB06            float32 `json:"PRB06"`
+	PRB07            float32 `json:"PRB07"`
+	PRB08            float32 `json:"PRB08"`
+	PRB09            float32 `json:"PRB09"`
+	PRB10            float32 `json:"PRB10"`
+	PRB11            float32 `json:"PRB11"`
+	PRB12            float32 `json:"PRB12"`
+	PRB13            float32 `json:"PRB13"`
+	PRB14            float32 `json:"PRB14"`
+	PRB15            float32 `json:"PRB15"`
+	PRB16            float32 `json:"PRB16"`
+	PRB17            float32 `json:"PRB17"`
+	PRB18            float32 `json:"PRB18"`
+	PRB19            float32 `json:"PRB19"`
+	PRB20            float32 `json:"PRB20"`
+	PRB21            float32 `json:"PRB21"`
+	PRB22            float32 `json:"PRB22"`
+	PRB23            float32 `json:"PRB23"`
+	PRB24            float32 `json:"PRB24"`
+	PRB25            float32 `json:"PRB25"`
+	PRB26            float32 `json:"PRB26"`
+	PRB27            float32 `json:"PRB27"`
+	PRB28            float32 `json:"PRB28"`
+	PRB29            float32 `json:"PRB29"`
+	PRB30            float32 `json:"PRB30"`
+	PRB31            float32 `json:"PRB31"`
+	PRB32            float32 `json:"PRB32"`
+	PRB33            float32 `json:"PRB33"`
+	PRB34            float32 `json:"PRB34"`
+	PRB35            float32 `json:"PRB35"`
+	PRB36            float32 `json:"PRB36"`
+	PRB37            float32 `json:"PRB37"`
+	PRB38            float32 `json:"PRB38"`
+	PRB39            float32 `json:"PRB39"`
+	PRB40            float32 `json:"PRB40"`
+	PRB41            float32 `json:"PRB41"`
+	PRB42            float32 `json:"PRB42"`
+	PRB43            float32 `json:"PRB43"`
+	PRB44            float32 `json:"PRB44"`
+	PRB45            float32 `json:"PRB45"`
+	PRB46            float32 `json:"PRB46"`
+	PRB47            float32 `json:"PRB47"`
+	PRB48            float32 `json:"PRB48"`
+	PRB49            float32 `json:"PRB49"`
+	PRB50            float32 `json:"PRB50"`
+	PRB51            float32 `json:"PRB51"`
+	PRB52            float32 `json:"PRB52"`
+	PRB53            float32 `json:"PRB53"`
+	PRB54            float32 `json:"PRB54"`
+	PRB55            float32 `json:"PRB55"`
+	PRB56            float32 `json:"PRB56"`
+	PRB57            float32 `json:"PRB57"`
+	PRB58            float32 `json:"PRB58"`
+	PRB59            float32 `json:"PRB59"`
+	PRB60            float32 `json:"PRB60"`
+	PRB61            float32 `json:"PRB61"`
+	PRB62            float32 `json:"PRB62"`
+	PRB63            float32 `json:"PRB63"`
+	PRB64            float32 `json:"PRB64"`
+	PRB65            float32 `json:"PRB65"`
+	PRB66            float32 `json:"PRB66"`
+	PRB67            float32 `json:"PRB67"`
+	PRB68            float32 `json:"PRB68"`
+	PRB69            float32 `json:"PRB69"`
+	PRB70            float32 `json:"PRB70"`
+	PRB71            float32 `json:"PRB71"`
+	PRB72            float32 `json:"PRB72"`
+	PRB73            float32 `json:"PRB73"`
+	PRB74            float32 `json:"PRB74"`
+	PRB75            float32 `json:"PRB75"`
+	PRB76            float32 `json:"PRB76"`
+	PRB77            float32 `json:"PRB77"`
+	PRB78            float32 `json:"PRB78"`
+	PRB79            float32 `json:"PRB79"`
+	PRB80            float32 `json:"PRB80"`
+	PRB81            float32 `json:"PRB81"`
+	PRB82            float32 `json:"PRB82"`
+	PRB83            float32 `json:"PRB83"`
+	PRB84            float32 `json:"PRB84"`
+	PRB85            float32 `json:"PRB85"`
+	PRB86            float32 `json:"PRB86"`
+	PRB87            float32 `json:"PRB87"`
+	PRB88            float32 `json:"PRB88"`
+	PRB89            float32 `json:"PRB89"`
+	PRB90            float32 `json:"PRB90"`
+	PRB91            float32 `json:"PRB91"`
+	PRB92            float32 `json:"PRB92"`
+	PRB93            float32 `json:"PRB93"`
+	PRB94            float32 `json:"PRB94"`
+	PRB95            float32 `json:"PRB95"`
+	PRB96            float32 `json:"PRB96"`
+	PRB97            float32 `json:"PRB97"`
+	PRB98            float32 `json:"PRB98"`
+	PRB99            float32 `json:"PRB99"`
+}
+
 // GetCellInfo gets cell information from the tbCell table based on the provided input
 func GetCellInfo(db *sql.DB, query string) ([]Import.CellValues, error) {
 	// Prepare the SQL statement
@@ -672,4 +778,174 @@ func GeneratePRBNewTable(db *sql.DB, outputPath string) (string, error) {
 	} else {
 		return outputPath + " saved!", nil
 	}
+}
+
+// GetPRBSectorNames retrieves all the SectorNames from the tbPRB table
+func GetPRBSectorNames(db *sql.DB) ([]string, error) {
+	// Prepare the SQL statement
+	stmt, err := db.Prepare("SELECT UNIQUE SECTOR_NAME FROM tbPRB")
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate over the rows and retrieve the SectorNames
+	var sectorNames []string
+	for rows.Next() {
+		var sectorName string
+		err := rows.Scan(&sectorName)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		sectorNames = append(sectorNames, sectorName)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return sectorNames, nil
+}
+
+// GetPRBBySectorName retrieves all the PRB information from the tbPRB table based on SECTOR_NAME
+func GetPRBBySectorName(db *sql.DB, sectorName string) ([]Import.PRBData, error) {
+	// Prepare the SQL statement
+	stmt, err := db.Prepare("SELECT * FROM tbPRB WHERE SECTOR_NAME = ?")
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	rows, err := stmt.Query(sectorName)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []Import.PRBData
+
+	for rows.Next() {
+		prbData := Import.PRBData{}
+
+		// Scan the values into the struct fields
+		err = rows.Scan(
+			&prbData.StartTime, &prbData.ENODEB_NAME, &prbData.SECTOR_DESCRIPTION, &prbData.SECTOR_NAME,
+			&prbData.PRB00, &prbData.PRB01, &prbData.PRB02, &prbData.PRB03, &prbData.PRB04, &prbData.PRB05,
+			&prbData.PRB06, &prbData.PRB07, &prbData.PRB08, &prbData.PRB09, &prbData.PRB10, &prbData.PRB11,
+			&prbData.PRB12, &prbData.PRB13, &prbData.PRB14, &prbData.PRB15, &prbData.PRB16, &prbData.PRB17,
+			&prbData.PRB18, &prbData.PRB19, &prbData.PRB20, &prbData.PRB21, &prbData.PRB22, &prbData.PRB23,
+			&prbData.PRB24, &prbData.PRB25, &prbData.PRB26, &prbData.PRB27, &prbData.PRB28, &prbData.PRB29,
+			&prbData.PRB30, &prbData.PRB31, &prbData.PRB32, &prbData.PRB33, &prbData.PRB34, &prbData.PRB35,
+			&prbData.PRB36, &prbData.PRB37, &prbData.PRB38, &prbData.PRB39, &prbData.PRB40, &prbData.PRB41,
+			&prbData.PRB42, &prbData.PRB43, &prbData.PRB44, &prbData.PRB45, &prbData.PRB46, &prbData.PRB47,
+			&prbData.PRB48, &prbData.PRB49, &prbData.PRB50, &prbData.PRB51, &prbData.PRB52, &prbData.PRB53,
+			&prbData.PRB54, &prbData.PRB55, &prbData.PRB56, &prbData.PRB57, &prbData.PRB58, &prbData.PRB59,
+			&prbData.PRB60, &prbData.PRB61, &prbData.PRB62, &prbData.PRB63, &prbData.PRB64, &prbData.PRB65,
+			&prbData.PRB66, &prbData.PRB67, &prbData.PRB68, &prbData.PRB69, &prbData.PRB70, &prbData.PRB71,
+			&prbData.PRB72, &prbData.PRB73, &prbData.PRB74, &prbData.PRB75, &prbData.PRB76, &prbData.PRB77,
+			&prbData.PRB78, &prbData.PRB79, &prbData.PRB80, &prbData.PRB81, &prbData.PRB82, &prbData.PRB83,
+			&prbData.PRB84, &prbData.PRB85, &prbData.PRB86, &prbData.PRB87, &prbData.PRB88, &prbData.PRB89,
+			&prbData.PRB90, &prbData.PRB91, &prbData.PRB92, &prbData.PRB93, &prbData.PRB94, &prbData.PRB95,
+			&prbData.PRB96, &prbData.PRB97, &prbData.PRB98, &prbData.PRB99,
+		)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		// Append the struct to the results slice
+		results = append(results, prbData)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		results = append(results, prbData)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// GetPRBNewBySectorName retrieves all the PRB information from the tbPRBNew table based on SECTOR_NAME
+func GetPRBNewBySectorName(db *sql.DB, sectorName string) ([]PRBNewData, error) {
+	// Prepare the SQL statement
+	stmt, err := db.Prepare("SELECT * FROM tbPRBNew WHERE SECTOR_NAME = ?")
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	rows, err := stmt.Query(sectorName)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []PRBNewData
+
+	for rows.Next() {
+		prbData := PRBNewData{}
+
+		// Scan the values into the struct fields
+		err = rows.Scan(
+			&prbData.SECTOR_NAME, &prbData.Hour, &prbData.PRB_Interference,
+			&prbData.PRB00, &prbData.PRB01, &prbData.PRB02, &prbData.PRB03, &prbData.PRB04, &prbData.PRB05,
+			&prbData.PRB06, &prbData.PRB07, &prbData.PRB08, &prbData.PRB09, &prbData.PRB10, &prbData.PRB11,
+			&prbData.PRB12, &prbData.PRB13, &prbData.PRB14, &prbData.PRB15, &prbData.PRB16, &prbData.PRB17,
+			&prbData.PRB18, &prbData.PRB19, &prbData.PRB20, &prbData.PRB21, &prbData.PRB22, &prbData.PRB23,
+			&prbData.PRB24, &prbData.PRB25, &prbData.PRB26, &prbData.PRB27, &prbData.PRB28, &prbData.PRB29,
+			&prbData.PRB30, &prbData.PRB31, &prbData.PRB32, &prbData.PRB33, &prbData.PRB34, &prbData.PRB35,
+			&prbData.PRB36, &prbData.PRB37, &prbData.PRB38, &prbData.PRB39, &prbData.PRB40, &prbData.PRB41,
+			&prbData.PRB42, &prbData.PRB43, &prbData.PRB44, &prbData.PRB45, &prbData.PRB46, &prbData.PRB47,
+			&prbData.PRB48, &prbData.PRB49, &prbData.PRB50, &prbData.PRB51, &prbData.PRB52, &prbData.PRB53,
+			&prbData.PRB54, &prbData.PRB55, &prbData.PRB56, &prbData.PRB57, &prbData.PRB58, &prbData.PRB59,
+			&prbData.PRB60, &prbData.PRB61, &prbData.PRB62, &prbData.PRB63, &prbData.PRB64, &prbData.PRB65,
+			&prbData.PRB66, &prbData.PRB67, &prbData.PRB68, &prbData.PRB69, &prbData.PRB70, &prbData.PRB71,
+			&prbData.PRB72, &prbData.PRB73, &prbData.PRB74, &prbData.PRB75, &prbData.PRB76, &prbData.PRB77,
+			&prbData.PRB78, &prbData.PRB79, &prbData.PRB80, &prbData.PRB81, &prbData.PRB82, &prbData.PRB83,
+			&prbData.PRB84, &prbData.PRB85, &prbData.PRB86, &prbData.PRB87, &prbData.PRB88, &prbData.PRB89,
+			&prbData.PRB90, &prbData.PRB91, &prbData.PRB92, &prbData.PRB93, &prbData.PRB94, &prbData.PRB95,
+			&prbData.PRB96, &prbData.PRB97, &prbData.PRB98, &prbData.PRB99,
+		)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		// Append the struct to the results slice
+		results = append(results, prbData)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		results = append(results, prbData)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return results, nil
 }

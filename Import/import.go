@@ -82,13 +82,120 @@ type KpiValues struct {
 }
 
 type MROData struct {
-	TimeStamp         string  `db:"TimeStamp"`         // 测量时间点
-	ServingSector     string  `db:"ServingSector"`     // 服务小区/主小区ID
-	InterferingSector string  `db:"InterferingSector"` // 干扰小区ID
-	LteScRSRP         float64 `db:"LteScRSRP"`         // 服务小区参考信号接收功率RSRP
-	LteNcRSRP         float64 `db:"LteNcRSRP"`         // 干扰小区参考信号接收功率RSRP
-	LteNcEarfcn       int     `db:"LteNcEarfcn"`       // 干扰小区频点
-	LteNcPci          int16   `db:"LteNcPci"`          // 干扰小区PCI
+	TimeStamp         string  `json:"TimeStamp"`         // 测量时间点
+	ServingSector     string  `json:"ServingSector"`     // 服务小区/主小区ID
+	InterferingSector string  `json:"InterferingSector"` // 干扰小区ID
+	LteScRSRP         float64 `json:"LteScRSRP"`         // 服务小区参考信号接收功率RSRP
+	LteNcRSRP         float64 `json:"LteNcRSRP"`         // 干扰小区参考信号接收功率RSRP
+	LteNcEarfcn       int     `json:"LteNcEarfcn"`       // 干扰小区频点
+	LteNcPci          int16   `json:"LteNcPci"`          // 干扰小区PCI
+}
+
+type PRBData struct {
+	StartTime          string `json:"StartTime"`
+	ENODEB_NAME        string `json:"ENODEB_NAME"`
+	SECTOR_DESCRIPTION string `json:"SECTOR_DESCRIPTION"`
+	SECTOR_NAME        string `json:"SECTOR_NAME"`
+	PRB00              int    `json:"PRB00"`
+	PRB01              int    `json:"PRB01"`
+	PRB02              int    `json:"PRB02"`
+	PRB03              int    `json:"PRB03"`
+	PRB04              int    `json:"PRB04"`
+	PRB05              int    `json:"PRB05"`
+	PRB06              int    `json:"PRB06"`
+	PRB07              int    `json:"PRB07"`
+	PRB08              int    `json:"PRB08"`
+	PRB09              int    `json:"PRB09"`
+	PRB10              int    `json:"PRB10"`
+	PRB11              int    `json:"PRB11"`
+	PRB12              int    `json:"PRB12"`
+	PRB13              int    `json:"PRB13"`
+	PRB14              int    `json:"PRB14"`
+	PRB15              int    `json:"PRB15"`
+	PRB16              int    `json:"PRB16"`
+	PRB17              int    `json:"PRB17"`
+	PRB18              int    `json:"PRB18"`
+	PRB19              int    `json:"PRB19"`
+	PRB20              int    `json:"PRB20"`
+	PRB21              int    `json:"PRB21"`
+	PRB22              int    `json:"PRB22"`
+	PRB23              int    `json:"PRB23"`
+	PRB24              int    `json:"PRB24"`
+	PRB25              int    `json:"PRB25"`
+	PRB26              int    `json:"PRB26"`
+	PRB27              int    `json:"PRB27"`
+	PRB28              int    `json:"PRB28"`
+	PRB29              int    `json:"PRB29"`
+	PRB30              int    `json:"PRB30"`
+	PRB31              int    `json:"PRB31"`
+	PRB32              int    `json:"PRB32"`
+	PRB33              int    `json:"PRB33"`
+	PRB34              int    `json:"PRB34"`
+	PRB35              int    `json:"PRB35"`
+	PRB36              int    `json:"PRB36"`
+	PRB37              int    `json:"PRB37"`
+	PRB38              int    `json:"PRB38"`
+	PRB39              int    `json:"PRB39"`
+	PRB40              int    `json:"PRB40"`
+	PRB41              int    `json:"PRB41"`
+	PRB42              int    `json:"PRB42"`
+	PRB43              int    `json:"PRB43"`
+	PRB44              int    `json:"PRB44"`
+	PRB45              int    `json:"PRB45"`
+	PRB46              int    `json:"PRB46"`
+	PRB47              int    `json:"PRB47"`
+	PRB48              int    `json:"PRB48"`
+	PRB49              int    `json:"PRB49"`
+	PRB50              int    `json:"PRB50"`
+	PRB51              int    `json:"PRB51"`
+	PRB52              int    `json:"PRB52"`
+	PRB53              int    `json:"PRB53"`
+	PRB54              int    `json:"PRB54"`
+	PRB55              int    `json:"PRB55"`
+	PRB56              int    `json:"PRB56"`
+	PRB57              int    `json:"PRB57"`
+	PRB58              int    `json:"PRB58"`
+	PRB59              int    `json:"PRB59"`
+	PRB60              int    `json:"PRB60"`
+	PRB61              int    `json:"PRB61"`
+	PRB62              int    `json:"PRB62"`
+	PRB63              int    `json:"PRB63"`
+	PRB64              int    `json:"PRB64"`
+	PRB65              int    `json:"PRB65"`
+	PRB66              int    `json:"PRB66"`
+	PRB67              int    `json:"PRB67"`
+	PRB68              int    `json:"PRB68"`
+	PRB69              int    `json:"PRB69"`
+	PRB70              int    `json:"PRB70"`
+	PRB71              int    `json:"PRB71"`
+	PRB72              int    `json:"PRB72"`
+	PRB73              int    `json:"PRB73"`
+	PRB74              int    `json:"PRB74"`
+	PRB75              int    `json:"PRB75"`
+	PRB76              int    `json:"PRB76"`
+	PRB77              int    `json:"PRB77"`
+	PRB78              int    `json:"PRB78"`
+	PRB79              int    `json:"PRB79"`
+	PRB80              int    `json:"PRB80"`
+	PRB81              int    `json:"PRB81"`
+	PRB82              int    `json:"PRB82"`
+	PRB83              int    `json:"PRB83"`
+	PRB84              int    `json:"PRB84"`
+	PRB85              int    `json:"PRB85"`
+	PRB86              int    `json:"PRB86"`
+	PRB87              int    `json:"PRB87"`
+	PRB88              int    `json:"PRB88"`
+	PRB89              int    `json:"PRB89"`
+	PRB90              int    `json:"PRB90"`
+	PRB91              int    `json:"PRB91"`
+	PRB92              int    `json:"PRB92"`
+	PRB93              int    `json:"PRB93"`
+	PRB94              int    `json:"PRB94"`
+	PRB95              int    `json:"PRB95"`
+	PRB96              int    `json:"PRB96"`
+	PRB97              int    `json:"PRB97"`
+	PRB98              int    `json:"PRB98"`
+	PRB99              int    `json:"PRB99"`
 }
 
 func AddtbCell(db *sql.DB, path string) error {

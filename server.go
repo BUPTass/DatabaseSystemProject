@@ -175,6 +175,32 @@ func main() {
 			return c.String(http.StatusOK, ret)
 		}
 	})
+	e.GET("/query/tbPRB/sector_name", func(c echo.Context) error {
+		ret, err := Query.GetPRBSectorNames(db)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, ret)
+		}
+	})
+	e.GET("/query/tbPRB", func(c echo.Context) error {
+		sector := c.FormValue("sector")
+		ret, err := Query.GetPRBBySectorName(db, sector)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, ret)
+		}
+	})
+	e.GET("/query/tbPRBNew", func(c echo.Context) error {
+		sector := c.FormValue("sector")
+		ret, err := Query.GetPRBNewBySectorName(db, sector)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSON(http.StatusOK, ret)
+		}
+	})
 
 	e.POST("/auth/signup", Auth.RegisterHandler)
 	e.POST("/auth/login", Auth.LoginHandler)

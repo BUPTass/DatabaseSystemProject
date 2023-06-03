@@ -260,6 +260,73 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get All sector name in tbPRB",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/tbPRB/sector_name",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"tbPRB",
+								"sector_name"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query tbPRB by sector name (15分钟数据)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/tbPRB?sector=B马质检局-HLHF-3",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"tbPRB"
+							],
+							"query": [
+								{
+									"key": "sector",
+									"value": "B马质检局-HLHF-3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query tbPRBNew by sector name (1小时数据)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/tbPRBNew?sector=B马质检局-HLHF-3",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"tbPRBNew"
+							],
+							"query": [
+								{
+									"key": "sector",
+									"value": "B马质检局-HLHF-3"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
