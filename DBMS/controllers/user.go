@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -39,27 +40,38 @@ func init() {
 	database_init()
 }
 func get_hash(text string) []byte {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println(err)
+	}
 	return hash
 }
 func check_password(username, password string) bool {
 	var ans []UserInfo
-	user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and conformed = 1", userinfoTableName_, username))
+	err := user_info.Select(&ans, "select * from info where username like ? and conformed = 1", username)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
 	if len(ans) != 1 {
 		return false
 	} else {
-		err := bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
-		return err != nil
+		err = bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
+		if err != nil {
+			log.Println(err.Error())
+			return false
+		}
+		return true
 	}
 }
 func get_level(username, password string) int {
 	var ans []UserInfo
-	err := user_info.Select(&ans, fmt.Sprintf("select * from %s where username like '%s' and conformed = 1", userinfoTableName_, username))
+	err := user_info.Select(&ans, "select * from info where username like ? and conformed = 1", username)
 	if err != nil && len(ans) != 1 {
 		return -1
 	} else {
 		err := bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
-		if err != nil {
+		if err == nil {
 			return ans[0].Level
 		}
 		return -1
@@ -84,7 +96,8 @@ func Login(c echo.Context) error {
 		//saving data
 		err := sess.Save(c.Request(), c.Response())
 		if err != nil {
-			panic(err)
+			log.Println(err.Error())
+			return err
 		}
 		return c.String(http.StatusOK, fmt.Sprintf("login success %s %d", username, sess.Values["level"]))
 	} else {
@@ -141,8 +154,8 @@ func DeleteUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//delete normal user:uname
-	stmt, _ := user_info.Prepare("delete from ? where username like ? and level = 1")
-	_, err = stmt.Exec(userinfoTableName_, uname)
+	stmt, _ := user_info.Prepare("delete from info where username like ?")
+	_, err = stmt.Exec(uname)
 	if err != nil {
 		return err
 	}
@@ -154,14 +167,19 @@ func Regist(c echo.Context) error {
 	password := c.QueryParam("password")
 	level := c.QueryParam("level")
 	var ans []UserInfo
-	err := user_info.Select(&ans, "select * from ? where username like ?", userinfoTableName_, username)
-	if err != nil || len(ans) != 0 {
+	err := user_info.Select(&ans, "select * from info where username like ?", username)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	} else if len(ans) != 0 {
 		return c.String(http.StatusOK, "username exist")
 	}
 	hashText := get_hash(password)
-	stmt, _ := user_info.Prepare("insert into ? values(?,?,?,0)")
-	_, err = stmt.Exec(userinfoTableName_, username, hashText, level)
+	stmt, _ := user_info.Prepare("insert into info values(?,?,?,0)")
+	_, err = stmt.Exec(username, string(hashText), level)
+
 	if err != nil {
+		log.Println(err.Error())
 		return err
 	}
 	return c.String(http.StatusOK, "success")
