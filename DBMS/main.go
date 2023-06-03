@@ -33,6 +33,8 @@ func main() {
 	//3.6 3.7
 	e.POST("/calc/C2Inew", controllers.C2InewCalc)
 	e.POST("/calc/C2I3", controllers.C2I3Calc)
+	//3.8
+	e.POST("/calc/MRO", controllers.MROMREcalc)
 
 	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
 
