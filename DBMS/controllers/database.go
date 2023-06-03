@@ -101,13 +101,13 @@ func DatabaseConnection(c echo.Context) error {
 			return err
 		}
 		type info struct {
-			ipname string
-			cnt    int
+			Ipname string
+			Cnt    int
 		}
 		var ans []info
 		var tmp info
 		for rows.Next() {
-			rows.Scan(&tmp.ipname, &tmp.cnt)
+			rows.Scan(&tmp.Ipname, &tmp.Cnt)
 			ans = append(ans, tmp)
 		}
 		return c.JSON(http.StatusOK, ans)
@@ -118,13 +118,13 @@ func DatabaseConnection(c echo.Context) error {
 			return err
 		}
 		type info struct {
-			user string
-			cnt  int
+			User string
+			Cnt  int
 		}
 		var ans []info
 		var tmp info
 		for rows.Next() {
-			rows.Scan(&tmp.user, &tmp.cnt)
+			rows.Scan(&tmp.User, &tmp.Cnt)
 			ans = append(ans, tmp)
 		}
 		return c.JSON(http.StatusOK, ans)
@@ -135,19 +135,19 @@ func DatabaseConnection(c echo.Context) error {
 			return err
 		}
 		type allinfo struct {
-			id      int
-			user    string
-			host    string
-			db      string
-			command string
-			time    int
-			state   string
-			info    string
+			Id      int
+			User    string
+			Host    string
+			Db      string
+			Command string
+			Time    int
+			State   string
+			Info    string
 		}
 		var ans []allinfo
 		var tmp allinfo
 		for rows.Next() {
-			rows.Scan(&tmp.id, &tmp.user, &tmp.host, &tmp.db, &tmp.command, &tmp.time, &tmp.state, &tmp.info)
+			rows.Scan(&tmp.Id, &tmp.User, &tmp.Host, &tmp.Db, &tmp.Command, &tmp.Time, &tmp.State, &tmp.Info)
 			ans = append(ans, tmp)
 		}
 		return c.JSON(http.StatusOK, ans)
