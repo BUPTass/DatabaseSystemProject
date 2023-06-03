@@ -184,7 +184,7 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 		Mesurement []struct {
 			Smr    string   `xml:"smr"`
 			Object []string `xml:"v"`
-		} `xml:"mesurement"`
+		} `xml:"measurement"`
 	}
 	XMLdecoder := xml.NewDecoder(reader)
 	data := XMLdata{}
@@ -300,7 +300,6 @@ func MROMREcalc(c echo.Context) error {
 	for _, file := range filesTmp {
 		if !file.IsDir() {
 			res := reg.MatchString(file.Name())
-			log.Println(file.Name())
 			if res {
 				files = append(files, file)
 			}
@@ -330,6 +329,7 @@ func MROMREcalc(c echo.Context) error {
 	for _, file := range files {
 		//解压
 		gzFile, err := os.Open(filePath + "\\" + file.Name())
+
 		if err != nil {
 			log.Println(err.Error())
 			continue
@@ -341,11 +341,13 @@ func MROMREcalc(c echo.Context) error {
 			continue
 		}
 		defer reader.Close()
+
 		wg.Add(1)
 		go XmlLifting(&wg, reader, idtable, table, errs)
+
 	}
 	wg.Wait()
-	_, err = db.Exec("alter table tbMROdatanew partition by hash(`ServingSector`)")
+	_, err = db.Exec("alter table tbMROdatanew partition by hash(`MroID`)")
 	if err != nil {
 		log.Println(err.Error())
 		return err
