@@ -135,8 +135,8 @@ func AddUser(c echo.Context) error {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
 	//change user conformed to 1
-	stmt, _ := user_info.Prepare("update ? set conformed = 1 where username like ?")
-	_, err = stmt.Exec(userinfoTableName_, uname)
+	stmt, _ := user_info.Prepare("update info set conformed = 1 where username like ?")
+	_, err = stmt.Exec(uname)
 	if err != nil {
 		return err
 	}
