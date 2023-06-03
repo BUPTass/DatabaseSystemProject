@@ -1051,3 +1051,109 @@ func generatePattern(pCount int) string {
 
 	return pattern
 }
+
+func AddtbC2I(db *sql.DB, path string) error {
+	f, err := excelize.OpenFile(path)
+	if err != nil {
+		return err
+	}
+
+	var errorList []string
+	executed := false
+	var stmt *sql.Stmt
+
+	// Prepare the batch insertion statement
+	statementPre := `INSERT INTO tbC2I (CITY, SCELL, NCELL, PrC2I9, C2I_Mean, Std, SampleCount, WeightedC2I) 
+		VALUES %s ON DUPLICATE KEY UPDATE
+		CITY = VALUES(CITY), SCELL = VALUES(SCELL), NCELL = VALUES(NCELL), PrC2I9 = VALUES(PrC2I9),
+		C2I_Mean = VALUES(C2I_Mean), Std = VALUES(Std), SampleCount = VALUES(SampleCount),
+		WeightedC2I = VALUES(WeightedC2I)`
+
+	count := 0
+	// Define the batch size
+	batchSize := 50
+	values := make([]interface{}, 0, batchSize*8)
+
+	// Read only the 1st sheet
+	sheet := f.GetSheetName(0)
+	rows, err := f.Rows(sheet)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	valueStrings := make([]string, 0)
+
+	// Skip the first scheme line
+	rows.Next()
+
+	for rows.Next() {
+		count++
+		row, err := rows.Columns()
+		if err != nil || len(row) != 8 {
+			newErr := "No sufficient columns when importing entry: " + strconv.Itoa(count) + " in " + path
+			errorList = append(errorList, newErr)
+			log.Println(newErr)
+			for i := len(row); i < 8; i++ {
+				row = append(row, "")
+			}
+		}
+		// Extract the cell values from the row.
+
+		cellValues := []interface{}{
+			row[0],
+			row[1],
+			row[2],
+			row[3],
+			row[4],
+			row[5],
+			row[6],
+			row[7],
+		}
+
+		// Batch insertion
+		if !executed {
+			valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?)")
+		}
+
+		// Append the cell values to the batch
+		values = append(values, cellValues...)
+
+		// If the batch size is reached, execute the batch insertion
+		if len(values) == batchSize*19 {
+			if !executed {
+				statement := fmt.Sprintf(statementPre, strings.Join(valueStrings, ","))
+				stmt, err = db.Prepare(statement)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+				defer stmt.Close()
+				executed = true
+			}
+			_, err = stmt.Exec(values...)
+			if err != nil {
+				log.Println("Error executing batch insertion:", err)
+				errorList = append(errorList, err.Error())
+				// Fallback to single insertion when bulk insertion failed
+				errorList = singleInsertion(db, values, statementPre, 8, errorList)
+			}
+			values = values[:0] // Clear the batch
+		}
+	}
+
+	if err = rows.Close(); err != nil {
+		fmt.Println(err)
+	}
+	if err = f.Close(); err != nil {
+		fmt.Println(err)
+	}
+
+	// Insert the remaining values in the batch
+	errorList = singleInsertion(db, values, statementPre, 8, errorList)
+
+	if len(errorList) > 0 {
+		return errors.New(strings.Join(errorList, "\n"))
+	} else {
+		return nil
+	}
+}

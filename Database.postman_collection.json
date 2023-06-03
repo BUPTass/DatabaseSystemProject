@@ -103,6 +103,30 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Import tbC2I",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/import/tbC2I?path=/root/DatabaseSystemProject/upload/1685791363135079823.xlsx",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"import",
+								"tbC2I"
+							],
+							"query": [
+								{
+									"key": "path",
+									"value": "/root/DatabaseSystemProject/upload/1685791363135079823.xlsx"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -331,6 +355,29 @@
 			]
 		},
 		{
+			"name": "Advanced Query",
+			"item": [
+				{
+					"name": "3.9 网络干扰结构分析",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/query/community",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"query",
+								"community"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Export table",
 			"request": {
 				"method": "GET",
@@ -358,7 +405,7 @@
 			"response": []
 		},
 		{
-			"name": "Upload Files",
+			"name": "Upload File",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -368,7 +415,7 @@
 						{
 							"key": "file",
 							"type": "file",
-							"src": "/C:/Users/Administrator/Desktop/01-1-xxx地区TD-LTE网络数据-2020-09-03/9. tbMROData.csv"
+							"src": "/C:/Users/Administrator/Desktop/01-1-xxx地区TD-LTE网络数据-2020-09-03/10. tbC2I.xlsx"
 						}
 					]
 				},

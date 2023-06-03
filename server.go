@@ -21,6 +21,10 @@ func main() {
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
 	}))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},                                        // Allow all origins
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE}, // Allow specified methods
+	}))
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Database System Project API backend")
 	})
@@ -30,7 +34,7 @@ func main() {
 		log.Fatal("Error connecting to database:", err)
 	}
 	defer db.Close()
-	e.Static("/download", "static")
+	e.Static("/download", "/root/DatabaseSystemProject/download")
 	e.POST("/import/tbCell", func(c echo.Context) error {
 		path := c.FormValue("path")
 
@@ -83,6 +87,20 @@ func main() {
 			return c.String(http.StatusOK, "New tbMROData Added")
 		}
 	})
+	e.POST("/import/tbC2I", func(c echo.Context) error {
+		path := c.FormValue("path")
+
+		if len(path) == 0 {
+			return c.String(http.StatusBadRequest, "No path provided")
+		}
+		err := Import.AddtbC2I(db, path)
+		if err != nil {
+			return c.String(http.StatusOK, err.Error())
+		} else {
+			return c.String(http.StatusOK, "New tbC2I Added")
+		}
+	})
+
 	e.GET("/export", func(c echo.Context) error {
 		path := c.FormValue("path")
 		table := c.FormValue("table")
@@ -199,6 +217,15 @@ func main() {
 			return c.String(http.StatusBadGateway, err.Error())
 		} else {
 			return c.JSON(http.StatusOK, ret)
+		}
+	})
+
+	e.GET("/query/community", func(c echo.Context) error {
+		ret, err := Query.GetCommunity(db)
+		if err != nil {
+			return c.String(http.StatusBadGateway, err.Error())
+		} else {
+			return c.JSONBlob(http.StatusOK, ret)
 		}
 	})
 
