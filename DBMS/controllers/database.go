@@ -166,7 +166,7 @@ func SetDatabase(c echo.Context) error {
 	if sess.Values["level"] != 0 {
 		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
 	}
-	_, err = db.Exec(fmt.Sprintf("set %s=%s", item, cond))
+	_, err = db.Exec(fmt.Sprintf("set global %s=%s", item, cond))
 	if err != nil {
 		return err
 	}

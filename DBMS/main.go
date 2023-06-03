@@ -29,7 +29,7 @@ func main() {
 	//database management
 	e.GET("/manage/databaseInfo", controllers.DatabaseInfo) //check database info
 	e.GET("/manage/databaseConnection", controllers.DatabaseConnection)
-	e.POST("/manage/databse", controllers.SetDatabase)
+	e.POST("/manage/database", controllers.SetDatabase)
 	//3.6 3.7
 	e.POST("/calc/C2Inew", controllers.C2InewCalc)
 	e.POST("/calc/C2I3", controllers.C2I3Calc)
