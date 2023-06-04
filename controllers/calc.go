@@ -239,7 +239,7 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable *sync.Map, tabl
 	for _, i := range result {
 		if _, ok := (*idtable).Load(i.SPci); !ok {
 			var Sid []string
-			nowerr = db.Select(&Sid, "select SECTOR_ID from tbCell where PCI = ?", i.SPci)
+			nowerr = db.Select(&Sid, "select distinct SECTOR_ID from tbCell where ENODEBID = ? and PCI = ?", i.Id, i.SPci)
 			if nowerr != nil {
 				log.Println(nowerr.Error())
 				(*err).Store(nowerr, true)
@@ -253,7 +253,7 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable *sync.Map, tabl
 		}
 		if _, ok := (*idtable).Load(i.NPci); !ok {
 			var Nid []string
-			nowerr = db.Select(&Nid, "select SECTOR_ID from tbCell where PCI = ?", i.NPci)
+			nowerr = db.Select(&Nid, "select distinct SECTOR_ID from tbCell where ENODEBID = ? and PCI = ?", i.Id, i.NPci)
 			if nowerr != nil {
 				log.Println(nowerr.Error())
 				(*err).Store(nowerr, true)
