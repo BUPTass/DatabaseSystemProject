@@ -17,7 +17,7 @@ type databaseInfo struct {
 }
 
 const (
-	dataDbName_ string = "tdlte"
+	dataDbName_ string = "LTE"
 )
 
 var db *sqlx.DB
@@ -37,10 +37,10 @@ func DatabaseInfo(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
 	//if ask basic database information
 	if cond == "databaseinfo" {
@@ -84,10 +84,10 @@ func DatabaseConnection(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
 	//query
 	//ip:查看当前连接中各个IP的连接数
@@ -152,7 +152,7 @@ func DatabaseConnection(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, ans)
 	}
-	return c.String(http.StatusOK, "please check your condition")
+	return c.String(http.StatusBadRequest, "please check your condition")
 }
 func SetDatabase(c echo.Context) error {
 	//"/manage/database?item=itemname&value=value"
@@ -161,10 +161,10 @@ func SetDatabase(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
 	_, err = db.Exec(fmt.Sprintf("set global %s=%s", item, cond))
 	if err != nil {

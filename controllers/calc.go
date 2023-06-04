@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/gonum/stat/distuv"
@@ -49,14 +51,14 @@ func C2InewCalc(c echo.Context) error {
 		Std               float32 `db:"std"`
 	}
 	var ans1 []dataTMP
-	stmt := "select ServingSector,InterferingSector,AVG(LteScRSRP-LteNcRSRP) as mean,STDDEV(LteScRSRP-LteNcRSRP) as std " +
-		"from tbMROData " +
-		"group by ServingSector,InterferingSector " +
-		"having count(*) >= ?"
+	stmt := `select ServingSector,InterferingSector,AVG(LteScRSRP-LteNcRSRP) as mean,STDDEV(LteScRSRP-LteNcRSRP) as std
+		from tbMROData 
+		group by ServingSector,InterferingSector 
+		having count(*) >= ?`
 	err := db.Select(&ans1, stmt, minC)
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	}
 	var prbc2i9 []float32
 	var prbabs6 []float32
@@ -72,109 +74,137 @@ func C2InewCalc(c echo.Context) error {
 		createTableStmt := "CREATE TABLE tbC2Inew (`SCELL` nvarchar(255),`NCELL` nvarchar(255), `RSRPmean` float, `RSRPstd` float, `PrbC2I9` float, `PrbABS6` float, PRIMARY KEY (`SCELL`,`NCELL`));"
 		_, err = db.Exec(createTableStmt)
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			log.Println(err)
+			return c.String(http.StatusBadGateway, err.Error())
 		}
 	} else if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	}
 	var ans []tbC2Inew
 	if err == nil {
 		db.Exec("delete from tbC2Inew")
 		insertStmt, err := db.Prepare("insert into tbC2Inew values(?,?,?,?,?,?)")
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			log.Println(err)
+			return c.String(http.StatusBadGateway, err.Error())
 		} else {
 			for i := 0; i < len(ans1); i++ {
 				ans = append(ans, tbC2Inew{ans1[i].ServingSector, ans1[i].InterferingSector, ans1[i].Mean, ans1[i].Std, prbc2i9[i], prbabs6[i]})
 				_, err = insertStmt.Exec(ans1[i].ServingSector, ans1[i].InterferingSector, ans1[i].Mean, ans1[i].Std, prbc2i9[i], prbabs6[i])
 				if err != nil {
-					log.Println(err.Error())
-					return err
+					log.Println(err)
+					return c.String(http.StatusBadGateway, err.Error())
 				}
 			}
 		}
 	} else {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	}
 	return c.JSON(http.StatusOK, ans)
 }
-func C2I3Calc(c echo.Context) error {
-	x := c.QueryParam("x")
+func C2I3Calc(cc echo.Context) error {
+	threshold, err := strconv.ParseFloat(cc.QueryParam("threshold"), 64)
+	if err != nil || len(cc.QueryParam("threshold")) == 0 {
+		return cc.String(http.StatusBadRequest, "threshold not given")
+	}
+
 	//检查表tbC2Inew是否存在
 	var tableName string
-	err := db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2Inew").Scan(&tableName)
+	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
+		dataDbName_, "tbC2Inew").Scan(&tableName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return c.String(http.StatusOK, "tbC2Inew not exist, please calculate tbC2Inew first")
+			return cc.String(http.StatusOK, "tbC2Inew not exist, please calculate tbC2Inew first")
 		}
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return cc.String(http.StatusBadGateway, err.Error())
 	}
 	//检查表tbC2I3是否存在
-	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2I3").Scan(&tableName)
+	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
+		dataDbName_, "tbC2I3").Scan(&tableName)
 	if err == sql.ErrNoRows {
 		createTableStmt := "CREATE TABLE tbC2I3 (`a` nvarchar(255),`b` nvarchar(255),`c` nvarchar(255),PRIMARY KEY (`a`,`b`,`c`));"
 		_, err = db.Exec(createTableStmt)
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			log.Println(err)
+			return cc.String(http.StatusBadGateway, err.Error())
 		}
 	} else if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return cc.String(http.StatusBadGateway, err.Error())
 	} else {
 		db.Exec("delete from tbC2I3")
 	}
-	//计算三元组
-	var tb3tmp []tbC2I3
-	SelectStmt := "select A.SCELL as a,B.SCELL as b,B.NCELL as c from (tbC2Inew as A join tbC2Inew as B on A.NCELL = B.SCELL) join tbC2Inew as C on (C.SCELL = B.NCELL and C.NCELL = A.SCELL) or (C.SCELL = A.SCELL and C.NCELL = B.NCELL) where A.PrbABS6 >= ? and B.PrbABS6 >= ? and C.PrbABS6 >= ?"
-	err = db.Select(&tb3tmp, SelectStmt, x, x, x)
+
+	// Optimized C2I3 calculation
+	adjacencyMap := make(map[string][]string)
+	rows, err := db.Query("SELECT S_SECTOR_ID, N_SECTOR_ID FROM tbAdjCell")
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return cc.String(http.StatusBadGateway, err.Error())
 	}
-	//去重
-	s := make(map[tbC2I3]bool)
-	for i := 0; i < len(tb3tmp); i++ {
-		if tb3tmp[i].A > tb3tmp[i].B {
-			tmp := tb3tmp[i].A
-			tb3tmp[i].A = tb3tmp[i].B
-			tb3tmp[i].B = tmp
+	defer rows.Close()
+
+	// Store all adjacent cells into a hashmap
+	var aa, bb string
+	for rows.Next() {
+		err := rows.Scan(&aa, &bb)
+		if err != nil {
+			log.Println(err)
+			return cc.String(http.StatusBadGateway, err.Error())
 		}
-		if tb3tmp[i].B > tb3tmp[i].C {
-			tmp := tb3tmp[i].B
-			tb3tmp[i].B = tb3tmp[i].C
-			tb3tmp[i].C = tmp
-		}
-		if tb3tmp[i].A > tb3tmp[i].B {
-			tmp := tb3tmp[i].A
-			tb3tmp[i].A = tb3tmp[i].B
-			tb3tmp[i].B = tmp
-		}
-		s[tb3tmp[i]] = true
+		adjacencyMap[aa] = append(adjacencyMap[aa], bb)
 	}
+
+	var ans []tbC2I3
 	insertStmt, err := db.Prepare("insert into tbC2I3 values(?,?,?)")
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return cc.String(http.StatusBadGateway, err.Error())
 	}
-	var ans []tbC2I3
-	for k, v := range s {
-		if !v {
-			return c.String(http.StatusOK, "dynamic error")
-		}
-		_, err = insertStmt.Exec(k.A, k.B, k.C)
-		ans = append(ans, k)
-		if err != nil {
-			log.Println(err.Error())
-			return err
+
+	// Step 2: Iterate over triplets (a, b, c)
+	visited := make(map[string]bool) // Track visited tuples
+	for a, neighbors := range adjacencyMap {
+		for _, b := range neighbors {
+			for _, c := range adjacencyMap[b] {
+				// Create a sorted key for the tuple (a, b, c) for dedupe
+				keys := []string{a, b, c}
+				sort.Strings(keys)
+				key := strings.Join(keys, "-")
+
+				// Check if the tuple has been visited before
+				if visited[key] {
+					continue
+				}
+				visited[key] = true
+
+				// Step 3: Query interference data and calculate ratio
+				var ratio float64
+				err := db.QueryRow(`SELECT PrbABS6 FROM tbC2Inew WHERE ((SCELL = ? AND NCELL = ?) OR (NCELL = ? AND SCELL = ?)) 
+					AND PrbABS6 >= ?`, a, b, a, b, threshold).Scan(&ratio)
+				if err == sql.ErrNoRows {
+					continue
+				} else if err != nil {
+					log.Println(err)
+					return cc.String(http.StatusBadGateway, err.Error())
+				}
+
+				// Step 4: Check if ratio meets threshold and insert into tbC2I3
+				if ratio >= threshold {
+					_, err := insertStmt.Exec(a, b, c)
+					if err != nil {
+						log.Println(err)
+						return cc.String(http.StatusBadGateway, err.Error())
+					}
+					ans = append(ans, tbC2I3{A: a, B: b, C: c})
+				}
+			}
 		}
 	}
-	return c.JSON(http.StatusOK, ans)
+	return cc.JSON(http.StatusOK, ans)
 }
 func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table sync.Map, err sync.Map) {
 	defer wg.Done()
@@ -293,7 +323,7 @@ func MROMREcalc(c echo.Context) error {
 	var files []fs.DirEntry
 	filesTmp, err := os.ReadDir(filePath)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		return err
 	}
 	reg, _ := regexp.Compile("MRO")
@@ -312,12 +342,12 @@ func MROMREcalc(c echo.Context) error {
 		createTableStmt := "CREATE TABLE tbMROdatanew (`MroID` int,`ServingSector` varchar(15), `InterferingSector` varchar(15), `LteScRSRP` int, `LteNcRSRP` int, `LteNcEarfcn` int, `LteNcPci` smallint,PRIMARY KEY (`MroID`,`ServingSector`,`InterferingSector`));"
 		_, err = db.Exec(createTableStmt)
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			log.Println(err)
+			return c.String(http.StatusBadGateway, err.Error())
 		}
 	} else if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	} else {
 		db.Exec("delete from tbMROdatanew")
 	}
@@ -331,13 +361,13 @@ func MROMREcalc(c echo.Context) error {
 		gzFile, err := os.Open(filePath + "\\" + file.Name())
 
 		if err != nil {
-			log.Println(err.Error())
+			log.Println(err)
 			continue
 		}
 		defer gzFile.Close()
 		reader, err := gzip.NewReader(gzFile)
 		if err != nil {
-			log.Println(err.Error())
+			log.Println(err)
 			continue
 		}
 		defer reader.Close()
@@ -349,20 +379,20 @@ func MROMREcalc(c echo.Context) error {
 	wg.Wait()
 	_, err = db.Exec("alter table tbMROdatanew partition by hash(`MroID`)")
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	}
 	//写入数据库
 	insertStmt, err := db.Prepare("insert into tbMROdatanew values(?,?,?,?,?,?,?)")
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.String(http.StatusBadGateway, err.Error())
 	} else {
 		table.Range(func(key, value interface{}) bool {
 			i := key.(tbMRODatanew)
 			_, err = insertStmt.Exec(i.MroID, i.ServingSector, i.InterferingSector, i.LteScRSRP, i.LteNcRSRP, i.LteNcEarfcn, i.LteNcPci)
 			if err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				return false
 			}
 			return true

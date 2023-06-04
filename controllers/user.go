@@ -14,16 +14,16 @@ import (
 )
 
 type UserInfo struct {
-	UserName  string `db:"username"`
-	Password  string `db:"password"`
-	Level     int    `db:"level"`     //0 for admin,1 for normal user
-	Conformed int    `db:"conformed"` //false for unavailable
+	UserName  string `db:"username" json:"username"`
+	Password  string `db:"password" json:"password,omitempty"`
+	Level     int    `db:"level" json:"level"`         //0 for admin,1 for normal user
+	Confirmed bool   `db:"confirmed" json:"confirmed"` //false for unavailable
 }
 
 const (
 	username_          string = "root"
-	password_          string = "1594568520h"
-	userDbName_        string = "userinfo"
+	password_          string = "1taNWY1vXdTc4_-j"
+	userDbName_        string = "LTE"
 	userinfoTableName_ string = "info"
 	ip_                string = "127.0.0.1"
 	port_              int    = 3306
@@ -43,14 +43,15 @@ func get_hash(text string) []byte {
 	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
 	if err != nil {
 		log.Println(err)
+		return nil
 	}
 	return hash
 }
 func check_password(username, password string) bool {
 	var ans []UserInfo
-	err := user_info.Select(&ans, "select * from info where username like ? and conformed = 1", username)
+	err := user_info.Select(&ans, "select * from info where username = ? and confirmed = true", username)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		return false
 	}
 	if len(ans) != 1 {
@@ -58,7 +59,7 @@ func check_password(username, password string) bool {
 	} else {
 		err = bcrypt.CompareHashAndPassword([]byte(ans[0].Password), []byte(password))
 		if err != nil {
-			log.Println(err.Error())
+			log.Println(username + ": login failed")
 			return false
 		}
 		return true
@@ -66,7 +67,7 @@ func check_password(username, password string) bool {
 }
 func get_level(username, password string) int {
 	var ans []UserInfo
-	err := user_info.Select(&ans, "select * from info where username like ? and conformed = 1", username)
+	err := user_info.Select(&ans, "select * from info where username = ? and confirmed = true", username)
 	if err != nil && len(ans) != 1 {
 		return -1
 	} else {
@@ -96,12 +97,12 @@ func Login(c echo.Context) error {
 		//saving data
 		err := sess.Save(c.Request(), c.Response())
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			log.Println(err)
+			return c.NoContent(http.StatusBadGateway)
 		}
 		return c.String(http.StatusOK, fmt.Sprintf("login success %s %d", username, sess.Values["level"]))
 	} else {
-		return c.String(http.StatusForbidden, "please check your username and password")
+		return c.String(http.StatusUnauthorized, "please check your username and password")
 	}
 }
 func GetUsers(c echo.Context) error {
@@ -109,19 +110,39 @@ func GetUsers(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
 	//select users
 	var ans []UserInfo
-	err = user_info.Select(&ans, fmt.Sprintf("select * from %s", userinfoTableName_))
+	err = user_info.Select(&ans, fmt.Sprintf("select username,level,confirmed from %s", userinfoTableName_))
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusBadGateway)
 	}
 	return c.JSON(http.StatusOK, ans)
 }
+
+func GetUnconfirmedUsers(c echo.Context) error {
+	//"/show/users"
+	//check session
+	sess, err := session.Get("session", c)
+	if err != nil {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+	if sess.Values["level"] != 0 {
+		return c.String(http.StatusForbidden, "insufficient permissions")
+	}
+	//select users
+	var ans []string
+	err = user_info.Select(&ans, fmt.Sprintf("select username from %s where confirmed = false", userinfoTableName_))
+	if err != nil {
+		return c.NoContent(http.StatusBadGateway)
+	}
+	return c.JSON(http.StatusOK, ans)
+}
+
 func AddUser(c echo.Context) error {
 	//"/add/user?username=name"
 	uname := c.QueryParam("username")
@@ -129,16 +150,16 @@ func AddUser(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
-	//change user conformed to 1
-	stmt, _ := user_info.Prepare("update info set conformed = 1 where username like ?")
+	//change user confirmed to 1
+	stmt, _ := user_info.Prepare("update info set confirmed = true where username = ?")
 	_, err = stmt.Exec(uname)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusBadGateway)
 	}
 	return c.String(http.StatusOK, "success")
 }
@@ -148,39 +169,39 @@ func DeleteUser(c echo.Context) error {
 	//check session
 	sess, err := session.Get("session", c)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusUnauthorized)
 	}
 	if sess.Values["level"] != 0 {
-		return c.String(http.StatusMethodNotAllowed, "insufficient permissions")
+		return c.String(http.StatusForbidden, "insufficient permissions")
 	}
 	//delete normal user:uname
-	stmt, _ := user_info.Prepare("delete from info where username like ?")
+	stmt, _ := user_info.Prepare("delete from info where username = ?")
 	_, err = stmt.Exec(uname)
 	if err != nil {
-		return err
+		return c.NoContent(http.StatusBadGateway)
 	}
 	return c.String(http.StatusOK, "success")
 }
-func Regist(c echo.Context) error {
-	//"/regist?username=name&password=password&level=num"
+func Register(c echo.Context) error {
+	//"/register?username=name&password=password&level=num"
 	username := c.QueryParam("username")
 	password := c.QueryParam("password")
 	level := c.QueryParam("level")
 	var ans []UserInfo
-	err := user_info.Select(&ans, "select * from info where username like ?", username)
+	err := user_info.Select(&ans, "select * from info where username = ?", username)
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.NoContent(http.StatusBadGateway)
 	} else if len(ans) != 0 {
-		return c.String(http.StatusOK, "username exist")
+		return c.String(http.StatusConflict, "username already existed")
 	}
 	hashText := get_hash(password)
 	stmt, _ := user_info.Prepare("insert into info values(?,?,?,0)")
 	_, err = stmt.Exec(username, string(hashText), level)
 
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		log.Println(err)
+		return c.NoContent(http.StatusBadGateway)
 	}
 	return c.String(http.StatusOK, "success")
 }
