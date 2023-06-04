@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -12,7 +13,9 @@ func TableAsCSV(db *sql.DB, outputPath, tableName string) (string, error) {
 	isDefault := true
 	if len(outputPath) == 0 {
 		// default storage path
-		outputPath = "/root/DatabaseSystemProject/download/" + randomName
+		os.Mkdir("/tmp/tmp", 0777)
+		os.Chmod("/tmp/tmp", 0777)
+		outputPath = "/tmp/tmp/" + randomName
 	} else {
 		outputPath = outputPath + "/" + randomName
 		isDefault = false
@@ -111,6 +114,7 @@ func TableAsCSV(db *sql.DB, outputPath, tableName string) (string, error) {
 	}
 
 	if isDefault {
+		os.Rename("/tmp/tmp/"+randomName, "./download/"+randomName)
 		return "/download/" + randomName, nil
 	} else {
 		return outputPath + " saved!", nil

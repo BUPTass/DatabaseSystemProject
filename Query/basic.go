@@ -762,7 +762,7 @@ func GeneratePRBNewTable(db *sql.DB, outputPath string) (string, error) {
 	isDefault := true
 	if len(outputPath) == 0 {
 		// default storage path
-		outputPath = "/root/DatabaseSystemProject/download/" + randomName
+		outputPath = "./download/" + randomName
 	} else {
 		outputPath = outputPath + "/" + randomName
 		isDefault = false

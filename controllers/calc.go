@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"encoding/xml"
+	"github.com/labstack/echo-contrib/session"
 	"io/fs"
 	"log"
 	"net/http"
@@ -42,6 +43,11 @@ type tbMRODatanew struct {
 }
 
 func C2InewCalc(c echo.Context) error {
+	sess, err := session.Get("session", c)
+	if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	//param
 	minC := c.QueryParam("min")
 	type dataTMP struct {
@@ -55,7 +61,7 @@ func C2InewCalc(c echo.Context) error {
 		from tbMROData 
 		group by ServingSector,InterferingSector 
 		having count(*) >= ?`
-	err := db.Select(&ans1, stmt, minC)
+	err = db.Select(&ans1, stmt, minC)
 	if err != nil {
 		log.Println(err)
 		return c.String(http.StatusBadGateway, err.Error())
@@ -104,108 +110,79 @@ func C2InewCalc(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, ans)
 }
-func C2I3Calc(cc echo.Context) error {
-	threshold, err := strconv.ParseFloat(cc.QueryParam("threshold"), 64)
-	if err != nil || len(cc.QueryParam("threshold")) == 0 {
-		return cc.String(http.StatusBadRequest, "threshold not given")
+
+func C2I3Calc(c echo.Context) error {
+	sess, err := session.Get("session", c)
+	if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+		return c.NoContent(http.StatusUnauthorized)
 	}
 
+	x := c.QueryParam("x")
 	//检查表tbC2Inew是否存在
 	var tableName string
-	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
-		dataDbName_, "tbC2Inew").Scan(&tableName)
+	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2Inew").Scan(&tableName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return cc.String(http.StatusOK, "tbC2Inew not exist, please calculate tbC2Inew first")
+			return c.String(http.StatusOK, "tbC2Inew not exist, please calculate tbC2Inew first")
 		}
-		log.Println(err)
-		return cc.String(http.StatusBadGateway, err.Error())
+		log.Println(err.Error())
+		return err
 	}
 	//检查表tbC2I3是否存在
-	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?",
-		dataDbName_, "tbC2I3").Scan(&tableName)
+	err = db.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = ? AND table_name = ?", dataDbName_, "tbC2I3").Scan(&tableName)
 	if err == sql.ErrNoRows {
 		createTableStmt := "CREATE TABLE tbC2I3 (`a` nvarchar(255),`b` nvarchar(255),`c` nvarchar(255),PRIMARY KEY (`a`,`b`,`c`));"
 		_, err = db.Exec(createTableStmt)
 		if err != nil {
-			log.Println(err)
-			return cc.String(http.StatusBadGateway, err.Error())
+			log.Println(err.Error())
+			return err
 		}
 	} else if err != nil {
-		log.Println(err)
-		return cc.String(http.StatusBadGateway, err.Error())
+		log.Println(err.Error())
+		return err
 	} else {
 		db.Exec("delete from tbC2I3")
 	}
-
-	// Optimized C2I3 calculation
-	adjacencyMap := make(map[string][]string)
-	rows, err := db.Query("SELECT S_SECTOR_ID, N_SECTOR_ID FROM tbAdjCell")
+	//计算三元组
+	var tb3tmp []tbC2I3
+	SelectStmt := "select A.SCELL as a,B.SCELL as b,B.NCELL as c from (tbC2Inew as A join tbC2Inew as B on A.NCELL = B.SCELL) join tbC2Inew as C on (C.SCELL = B.NCELL and C.NCELL = A.SCELL) or (C.SCELL = A.SCELL and C.NCELL = B.NCELL) where A.PrbABS6 >= ? and B.PrbABS6 >= ? and C.PrbABS6 >= ?"
+	err = db.Select(&tb3tmp, SelectStmt, x, x, x)
 	if err != nil {
-		log.Println(err)
-		return cc.String(http.StatusBadGateway, err.Error())
-	}
-	defer rows.Close()
-
-	// Store all adjacent cells into a hashmap
-	var aa, bb string
-	for rows.Next() {
-		err := rows.Scan(&aa, &bb)
-		if err != nil {
-			log.Println(err)
-			return cc.String(http.StatusBadGateway, err.Error())
-		}
-		adjacencyMap[aa] = append(adjacencyMap[aa], bb)
+		log.Println(err.Error())
+		return err
 	}
 
-	var ans []tbC2I3
 	insertStmt, err := db.Prepare("insert into tbC2I3 values(?,?,?)")
 	if err != nil {
-		log.Println(err)
-		return cc.String(http.StatusBadGateway, err.Error())
+		log.Println(err.Error())
+		return err
 	}
+	var ans []tbC2I3
 
-	// Step 2: Iterate over triplets (a, b, c)
 	visited := make(map[string]bool) // Track visited tuples
-	for a, neighbors := range adjacencyMap {
-		for _, b := range neighbors {
-			for _, c := range adjacencyMap[b] {
-				// Create a sorted key for the tuple (a, b, c) for dedupe
-				keys := []string{a, b, c}
-				sort.Strings(keys)
-				key := strings.Join(keys, "-")
+	for i := 0; i < len(tb3tmp); i++ {
+		// Create a sorted key for the tuple (a, b, c) for dedupe
+		keys := []string{tb3tmp[i].A, tb3tmp[i].B, tb3tmp[i].C}
+		sort.Strings(keys)
+		key := strings.Join(keys, "-")
 
-				// Check if the tuple has been visited before
-				if visited[key] {
-					continue
-				}
-				visited[key] = true
-
-				// Step 3: Query interference data and calculate ratio
-				var ratio float64
-				err := db.QueryRow(`SELECT PrbABS6 FROM tbC2Inew WHERE ((SCELL = ? AND NCELL = ?) OR (NCELL = ? AND SCELL = ?)) 
-					AND PrbABS6 >= ?`, a, b, a, b, threshold).Scan(&ratio)
-				if err == sql.ErrNoRows {
-					continue
-				} else if err != nil {
-					log.Println(err)
-					return cc.String(http.StatusBadGateway, err.Error())
-				}
-
-				// Step 4: Check if ratio meets threshold and insert into tbC2I3
-				if ratio >= threshold {
-					_, err := insertStmt.Exec(a, b, c)
-					if err != nil {
-						log.Println(err)
-						return cc.String(http.StatusBadGateway, err.Error())
-					}
-					ans = append(ans, tbC2I3{A: a, B: b, C: c})
-				}
-			}
+		// Check if the tuple has been visited before
+		if visited[key] {
+			continue
 		}
+		visited[key] = true
+		_, err = insertStmt.Exec(tb3tmp[i].A, tb3tmp[i].B, tb3tmp[i].C)
+
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+		ans = append(ans, tb3tmp[i])
 	}
-	return cc.JSON(http.StatusOK, ans)
+
+	return c.JSON(http.StatusOK, ans)
 }
+
 func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table sync.Map, err sync.Map) {
 	defer wg.Done()
 	//提取xml文件信息
@@ -318,6 +295,11 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 	}
 }
 func MROMREcalc(c echo.Context) error {
+	sess, err := session.Get("session", c)
+	if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+		return c.NoContent(http.StatusUnauthorized)
+	}
+
 	filePath := c.QueryParam("filePath")
 	//step1
 	var files []fs.DirEntry
@@ -358,7 +340,7 @@ func MROMREcalc(c echo.Context) error {
 	var wg sync.WaitGroup
 	for _, file := range files {
 		//解压
-		gzFile, err := os.Open(filePath + "\\" + file.Name())
+		gzFile, err := os.Open(filePath + "/" + file.Name())
 
 		if err != nil {
 			log.Println(err)

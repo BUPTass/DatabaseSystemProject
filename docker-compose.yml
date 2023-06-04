@@ -1,0 +1,38 @@
+version: "3.7"
+services:
+  db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: LTE
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mariadb_data_container:/var/lib/mysql
+      - static_data_container:/tmp/tmp
+      - tmp_container:/tmp/tmp1
+      - ./mariadb:/docker-entrypoint-initdb.d
+  app:
+    build: .
+    command: sh -c "./app"
+    environment:
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_PORT: 3306
+      DB_HOST: db
+      DB_NAME: LTE
+    depends_on:
+      - db
+    ports:
+      - "1333:1334"
+    volumes:
+      - static_data_container:/download
+      - tmp_container:/tmp/tmp1
+
+volumes:
+  static_data_container:
+  mariadb_data_container:
+  tmp_container:
+networks:
+  default:
+    driver: bridge

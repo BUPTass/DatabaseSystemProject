@@ -1,12 +1,12 @@
 package main
 
 import (
-	"DatabaseSystemProject/Auth"
 	"DatabaseSystemProject/Export"
 	"DatabaseSystemProject/Import"
 	"DatabaseSystemProject/Query"
 	"DatabaseSystemProject/controllers"
 	"database/sql"
+	"fmt"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -14,9 +14,19 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"log"
 	"net/http"
+	"os"
 )
 
+var dbHost, dbPort, dbUser, dbPassword, dbName string
+
 func main() {
+	// Read the database connection details from environmental variables
+	dbHost = os.Getenv("DB_HOST")
+	dbPort = os.Getenv("DB_PORT")
+	dbUser = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbName = os.Getenv("DB_NAME")
+
 	e := echo.New()
 	e.Use(session.Middleware(sessions.NewCookieStore(securecookie.GenerateRandomKey(32), securecookie.GenerateRandomKey(32))))
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
@@ -26,6 +36,18 @@ func main() {
 		AllowOrigins: []string{"*"},                                        // Allow all origins
 		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE}, // Allow specified methods
 	}))
+
+	// Construct the database connection string
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	db, err := sql.Open("mysql", dbURI)
+	// Connect to the MySQL database.
+	//db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	defer db.Close()
+
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Database System Project API backend")
 	})
@@ -53,20 +75,19 @@ func main() {
 
 	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
 
-	// Connect to the MySQL database.
-	db, err := sql.Open("mysql", "root:1taNWY1vXdTc4_-j@tcp(127.0.0.1:3306)/LTE")
-	if err != nil {
-		log.Fatal("Error connecting to database:", err)
-	}
-	defer db.Close()
-	e.Static("/download", "/root/DatabaseSystemProject/download")
+	e.Static("/download", "./download")
 	e.POST("/import/tbCell", func(c echo.Context) error {
 		path := c.FormValue("path")
+
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
 
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbCell(db, path)
+		err = Import.AddtbCell(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -76,10 +97,15 @@ func main() {
 	e.POST("/import/tbKPI", func(c echo.Context) error {
 		path := c.FormValue("path")
 
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbKPI(db, path)
+		err = Import.AddtbKPI(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -89,10 +115,15 @@ func main() {
 	e.POST("/import/tbPRB", func(c echo.Context) error {
 		path := c.FormValue("path")
 
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbPRB(db, path)
+		err = Import.AddtbPRB(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -102,10 +133,15 @@ func main() {
 	e.POST("/import/tbMROData", func(c echo.Context) error {
 		path := c.FormValue("path")
 
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbMROData(db, path)
+		err = Import.AddtbMROData(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -115,10 +151,15 @@ func main() {
 	e.POST("/import/tbC2I", func(c echo.Context) error {
 		path := c.FormValue("path")
 
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		if len(path) == 0 {
 			return c.String(http.StatusBadRequest, "No path provided")
 		}
-		err := Import.AddtbC2I(db, path)
+		err = Import.AddtbC2I(db, path)
 		if err != nil {
 			return c.String(http.StatusOK, err.Error())
 		} else {
@@ -129,6 +170,11 @@ func main() {
 	e.GET("/export", func(c echo.Context) error {
 		path := c.FormValue("path")
 		table := c.FormValue("table")
+
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
 
 		if len(table) == 0 {
 			return c.String(http.StatusBadRequest, "Missing table")
@@ -142,8 +188,13 @@ func main() {
 	})
 
 	e.POST("/upload", func(c echo.Context) error {
-		file, err := c.FormFile("file")
 
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
+		file, err := c.FormFile("file")
 		if err != nil {
 			return c.NoContent(http.StatusBadRequest)
 		}
@@ -156,6 +207,11 @@ func main() {
 	})
 
 	e.GET("/query/sector_name", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		jsonByte, err := Query.GetAllSectorNames(db)
 		if err != nil {
 			return c.String(http.StatusBadGateway, err.Error())
@@ -164,6 +220,11 @@ func main() {
 		}
 	})
 	e.GET("/query/tbCell", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		query := c.FormValue("sector")
 		jsonByte, err := Query.GetCellInfo(db, query)
 		if err != nil {
@@ -174,6 +235,11 @@ func main() {
 	})
 
 	e.GET("/query/enodeb_name", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		jsonByte, err := Query.GetAllEnodebNames(db)
 		if err != nil {
 			return c.String(http.StatusBadGateway, err.Error())
@@ -182,6 +248,11 @@ func main() {
 		}
 	})
 	e.GET("/query/enodeb", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		query := c.FormValue("enodeb")
 		jsonByte, err := Query.GetEnodeb(db, query)
 		if err != nil {
@@ -192,6 +263,11 @@ func main() {
 	})
 
 	e.GET("/query/kpi/sector_name", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		jsonByte, err := Query.GetKPISectorNames(db)
 		if err != nil {
 			return c.String(http.StatusBadGateway, err.Error())
@@ -200,6 +276,11 @@ func main() {
 		}
 	})
 	e.GET("/query/kpi", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		query := c.FormValue("sector")
 		jsonByte, err := Query.GetKPIInfoBySectorName(db, query)
 		if err != nil {
@@ -210,6 +291,11 @@ func main() {
 	})
 
 	e.GET("/query/tbPRBNew/gen", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		path := c.FormValue("path")
 		ret, err := Query.GeneratePRBNewTable(db, path)
 		if err != nil {
@@ -219,6 +305,11 @@ func main() {
 		}
 	})
 	e.GET("/query/tbPRB/sector_name", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		ret, err := Query.GetPRBSectorNames(db)
 		if err != nil {
 			return c.String(http.StatusBadGateway, err.Error())
@@ -227,6 +318,11 @@ func main() {
 		}
 	})
 	e.GET("/query/tbPRB", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		sector := c.FormValue("sector")
 		ret, err := Query.GetPRBBySectorName(db, sector)
 		if err != nil {
@@ -236,6 +332,11 @@ func main() {
 		}
 	})
 	e.GET("/query/tbPRBNew", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		sector := c.FormValue("sector")
 		ret, err := Query.GetPRBNewBySectorName(db, sector)
 		if err != nil {
@@ -246,6 +347,11 @@ func main() {
 	})
 
 	e.GET("/query/community", func(c echo.Context) error {
+		sess, err := session.Get("session", c)
+		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
+			return c.NoContent(http.StatusUnauthorized)
+		}
+
 		ret, err := Query.GetCommunity(db)
 		if err != nil {
 			return c.String(http.StatusBadGateway, err.Error())
@@ -254,8 +360,5 @@ func main() {
 		}
 	})
 
-	e.POST("/auth/signup", Auth.RegisterHandler)
-	e.POST("/auth/login", Auth.LoginHandler)
-	e.GET("/auth/logout", Auth.LogoutHandler)
 	e.Logger.Fatal(e.Start(":1333"))
 }

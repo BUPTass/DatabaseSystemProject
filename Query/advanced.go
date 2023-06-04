@@ -18,6 +18,8 @@ type communityMsg struct {
 }
 
 func GetCommunity(db *sql.DB) ([]byte, error) {
+	os.Mkdir("/tmp/tmp1", 0777)
+	os.Chmod("/tmp/tmp1", 0777)
 	if err := getCoordinate(db); err != nil {
 		log.Println(err)
 		return nil, err
@@ -33,7 +35,7 @@ func GetCommunity(db *sql.DB) ([]byte, error) {
 	}
 
 	randomName := fmt.Sprintf("louvain-%d.png", time.Now().UnixNano())
-	if err := os.Rename("/tmp/louvain.png", "/root/DatabaseSystemProject/download/"+randomName); err != nil {
+	if err := os.Rename("/tmp/tmp1/louvain.png", "./download/"+randomName); err != nil {
 		log.Println(err)
 		return nil, err
 	}
@@ -43,7 +45,7 @@ func GetCommunity(db *sql.DB) ([]byte, error) {
 }
 
 func runLouvain() (string, error) {
-	cmd := exec.Command("python3", "/root/DatabaseSystemProject/run.py")
+	cmd := exec.Command("python3", "./run.py")
 
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
@@ -81,7 +83,7 @@ func getCoordinate(db *sql.DB) error {
 	coordinateString = coordinateString[:len(coordinateString)-2] + "}"
 
 	// Write the coordinateString to a file
-	savePath := "/tmp/coordinate.txt"
+	savePath := "/tmp/tmp1/coordinate.txt"
 	err = ioutil.WriteFile(savePath, []byte(coordinateString), os.ModePerm)
 	if err != nil {
 		log.Println(err)
@@ -92,10 +94,10 @@ func getCoordinate(db *sql.DB) error {
 
 func getC2I(db *sql.DB) error {
 	// Remove tbC2I.txt first
-	os.Remove("/tmp/tbC2I.txt")
+	os.Remove("/tmp/tmp1/tbC2I.txt")
 
 	exportSQL := `select SCELL, NCELL,C2I_Mean from tbC2I
-			INTO OUTFILE '/tmp/tbC2I.txt'
+			INTO OUTFILE '/tmp/tmp1/tbC2I.txt'
     		FIELDS TERMINATED BY ' '
     		OPTIONALLY ENCLOSED BY ''
     		LINES TERMINATED BY '\n';`

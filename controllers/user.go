@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
@@ -24,16 +25,27 @@ const (
 	username_          string = "root"
 	password_          string = "1taNWY1vXdTc4_-j"
 	userDbName_        string = "LTE"
-	userinfoTableName_ string = "info"
 	ip_                string = "127.0.0.1"
 	port_              int    = 3306
+	userinfoTableName_ string = "info"
 )
 
 var user_info *sqlx.DB
 
 func init() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username_, password_, ip_, port_, userDbName_)
-	user_info, _ = sqlx.Open("mysql", dsn)
+	// Read the database connection details from environmental variables
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username_, password_, ip_, port_, userDbName_)
+	//user_info, _ = sqlx.Open("mysql", dsn)
+
+	user_info, _ = sqlx.Open("mysql", dbURI)
 	if err := user_info.Ping(); err != nil {
 		panic(err)
 	}

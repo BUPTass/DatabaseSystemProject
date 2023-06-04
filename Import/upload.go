@@ -12,7 +12,7 @@ import (
 
 func UploadFile(file *multipart.FileHeader) (string, error) {
 	// upload path
-	path := "/root/DatabaseSystemProject/upload/"
+	path := "./upload/"
 
 	ext := filepath.Ext(file.Filename)
 	randomName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
@@ -34,7 +34,7 @@ func UploadFile(file *multipart.FileHeader) (string, error) {
 
 func DeleteFile(filename string) error {
 	// upload path
-	path := "/root/DatabaseSystemProject/upload/"
+	path := "./upload/"
 	err := os.Remove(path + filename)
 	if err != nil {
 		log.Println(err)
