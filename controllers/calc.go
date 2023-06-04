@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"encoding/xml"
-	"github.com/labstack/echo-contrib/session"
 	"io/fs"
 	"log"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/labstack/echo-contrib/session"
 
 	"github.com/gonum/stat/distuv"
 	"github.com/labstack/echo/v4"
@@ -183,7 +184,7 @@ func C2I3Calc(c echo.Context) error {
 	return c.JSON(http.StatusOK, ans)
 }
 
-func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table sync.Map, err sync.Map) {
+func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable *sync.Map, table *sync.Map, err *sync.Map) {
 	defer wg.Done()
 	//提取xml文件信息
 	type XMLdata struct {
@@ -198,7 +199,7 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 	nowerr := XMLdecoder.Decode(&data)
 	if nowerr != nil {
 		log.Println(nowerr.Error())
-		err.Store(nowerr, true)
+		(*err).Store(nowerr, true)
 	}
 	type Result struct {
 		Id      int
@@ -236,32 +237,32 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 	}
 	//获取主临小区ID
 	for _, i := range result {
-		if v, ok := idtable.Load(i.SPci); ok && v == "" {
+		if _, ok := (*idtable).Load(i.SPci); !ok {
 			var Sid []string
 			nowerr = db.Select(&Sid, "select SECTOR_ID from tbCell where PCI = ?", i.SPci)
 			if nowerr != nil {
 				log.Println(nowerr.Error())
-				err.Store(nowerr, true)
+				(*err).Store(nowerr, true)
 			}
 			if len(Sid) != 1 {
-				idtable.Store(i.SPci, "error")
+				(*idtable).Store(i.SPci, "error")
 				continue
 			} else {
-				idtable.Store(i.SPci, Sid[0])
+				(*idtable).Store(i.SPci, Sid[0])
 			}
 		}
-		if v, ok := idtable.Load(i.NPci); ok && v == "" {
+		if _, ok := (*idtable).Load(i.NPci); !ok {
 			var Nid []string
 			nowerr = db.Select(&Nid, "select SECTOR_ID from tbCell where PCI = ?", i.NPci)
 			if nowerr != nil {
 				log.Println(nowerr.Error())
-				err.Store(nowerr, true)
+				(*err).Store(nowerr, true)
 			}
 			if len(Nid) != 1 {
-				idtable.Store(i.NPci, "error")
+				(*idtable).Store(i.NPci, "error")
 				continue
 			}
-			idtable.Store(i.NPci, Nid[0])
+			(*idtable).Store(i.NPci, Nid[0])
 		}
 	}
 	//过滤
@@ -270,16 +271,16 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 	nowerr = db.Select(&EarfcnList, "select distinct EARFCN from tbCell")
 	if nowerr != nil {
 		log.Println(nowerr.Error())
-		err.Store(nowerr, true)
+		(*err).Store(nowerr, true)
 	}
 	for _, i := range EarfcnList {
 		Earfcn[i] = true
 	}
 	var tmp tbMRODatanew
 	for _, i := range result {
-		Sv, _ := idtable.Load(i.SPci)
+		Sv, _ := (*idtable).Load(i.SPci)
 		Sid := Sv.(string)
-		Nv, _ := idtable.Load(i.NPci)
+		Nv, _ := (*idtable).Load(i.NPci)
 		Nid := Nv.(string)
 		if i.NPci < 0 || i.NPci > 503 || i.NRSRP < 0 || i.NRSRP > 97 || i.SRSRP < 0 || i.SRSRP > 97 || !Earfcn[i.NEarfcn] || Sid == "" || Sid == "error" || Nid == "" || Nid == "error" {
 			continue
@@ -291,14 +292,10 @@ func XmlLifting(wg *sync.WaitGroup, reader *gzip.Reader, idtable sync.Map, table
 		tmp.LteNcRSRP = i.NRSRP
 		tmp.LteNcEarfcn = i.NEarfcn
 		tmp.LteNcPci = i.NPci
-		table.Store(tmp, true)
+		(*table).Store(tmp, true)
 	}
 }
 func MROMREcalc(c echo.Context) error {
-	sess, err := session.Get("session", c)
-	if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
-		return c.NoContent(http.StatusUnauthorized)
-	}
 
 	filePath := c.QueryParam("filePath")
 	//step1
@@ -355,7 +352,7 @@ func MROMREcalc(c echo.Context) error {
 		defer reader.Close()
 
 		wg.Add(1)
-		go XmlLifting(&wg, reader, idtable, table, errs)
+		go XmlLifting(&wg, reader, &idtable, &table, &errs)
 
 	}
 	wg.Wait()
