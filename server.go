@@ -48,35 +48,35 @@ func main() {
 	}
 	defer db.Close()
 
-	e.GET("/", func(c echo.Context) error {
+	e.GET("/api/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Database System Project API backend")
 	})
 
 	//route
 	//user management
-	e.POST("/login", controllers.Login)                               //user login
-	e.GET("/logout", controllers.Logout)                              //user logout
-	e.GET("/show/users", controllers.GetUsers)                        //show all users
-	e.GET("/show/users/unconfirmed", controllers.GetUnconfirmedUsers) //show unconfirmed users
-	e.POST("/add/user", controllers.AddUser)                          //add user
-	e.DELETE("/delete/user", controllers.DeleteUser)                  //delete user
-	e.POST("/register", controllers.Register)                         //user register
+	e.POST("/api/login", controllers.Login)                               //user login
+	e.GET("/api/logout", controllers.Logout)                              //user logout
+	e.GET("/api/show/users", controllers.GetUsers)                        //show all users
+	e.GET("/api/show/users/unconfirmed", controllers.GetUnconfirmedUsers) //show unconfirmed users
+	e.POST("/api/add/user", controllers.AddUser)                          //add user
+	e.DELETE("/delete/user", controllers.DeleteUser)                      //delete user
+	e.POST("/api/register", controllers.Register)                         //user register
 
 	//database management
-	e.GET("/manage/databaseInfo", controllers.DatabaseInfo) //check database info
-	e.GET("/manage/databaseConnection", controllers.DatabaseConnection)
-	e.POST("/manage/database", controllers.SetDatabase)
+	e.GET("/api/manage/databaseInfo", controllers.DatabaseInfo) //check database info
+	e.GET("/api/manage/databaseConnection", controllers.DatabaseConnection)
+	e.POST("/api/manage/database", controllers.SetDatabase)
 
 	//3.6 3.7
-	e.POST("/calc/C2Inew", controllers.C2InewCalc)
-	e.POST("/calc/C2I3", controllers.C2I3Calc)
+	e.POST("/api/calc/C2Inew", controllers.C2InewCalc)
+	e.POST("/api/calc/C2I3", controllers.C2I3Calc)
 	//3.8
-	e.POST("/calc/MRO", controllers.MROMREcalc)
+	e.POST("/api/calc/MRO", controllers.MROMREcalc)
 
-	e.GET("/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
+	e.GET("/api/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
 
 	e.Static("/download", "./download")
-	e.POST("/import/tbCell", func(c echo.Context) error {
+	e.POST("/api/import/tbCell", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		sess, err := session.Get("session", c)
@@ -94,7 +94,7 @@ func main() {
 			return c.String(http.StatusOK, "New tbCell Added")
 		}
 	})
-	e.POST("/import/tbKPI", func(c echo.Context) error {
+	e.POST("/api/import/tbKPI", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		sess, err := session.Get("session", c)
@@ -112,7 +112,7 @@ func main() {
 			return c.String(http.StatusOK, "New tbKPI Added")
 		}
 	})
-	e.POST("/import/tbPRB", func(c echo.Context) error {
+	e.POST("/api/import/tbPRB", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		sess, err := session.Get("session", c)
@@ -130,7 +130,7 @@ func main() {
 			return c.String(http.StatusOK, "New tbRPB Added")
 		}
 	})
-	e.POST("/import/tbMROData", func(c echo.Context) error {
+	e.POST("/api/import/tbMROData", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		sess, err := session.Get("session", c)
@@ -148,7 +148,7 @@ func main() {
 			return c.String(http.StatusOK, "New tbMROData Added")
 		}
 	})
-	e.POST("/import/tbC2I", func(c echo.Context) error {
+	e.POST("/api/import/tbC2I", func(c echo.Context) error {
 		path := c.FormValue("path")
 
 		sess, err := session.Get("session", c)
@@ -167,7 +167,7 @@ func main() {
 		}
 	})
 
-	e.GET("/export", func(c echo.Context) error {
+	e.GET("/api/export", func(c echo.Context) error {
 		path := c.FormValue("path")
 		table := c.FormValue("table")
 
@@ -187,7 +187,7 @@ func main() {
 		}
 	})
 
-	e.POST("/upload", func(c echo.Context) error {
+	e.POST("/api/upload", func(c echo.Context) error {
 
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
@@ -206,7 +206,7 @@ func main() {
 		}
 	})
 
-	e.GET("/query/sector_name", func(c echo.Context) error {
+	e.GET("/api/query/sector_name", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -219,7 +219,7 @@ func main() {
 			return c.JSON(http.StatusOK, jsonByte)
 		}
 	})
-	e.GET("/query/tbCell", func(c echo.Context) error {
+	e.GET("/api/query/tbCell", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -234,7 +234,7 @@ func main() {
 		}
 	})
 
-	e.GET("/query/enodeb_name", func(c echo.Context) error {
+	e.GET("/api/query/enodeb_name", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -247,7 +247,7 @@ func main() {
 			return c.JSON(http.StatusOK, jsonByte)
 		}
 	})
-	e.GET("/query/enodeb", func(c echo.Context) error {
+	e.GET("/api/query/enodeb", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -262,7 +262,7 @@ func main() {
 		}
 	})
 
-	e.GET("/query/kpi/sector_name", func(c echo.Context) error {
+	e.GET("/api/query/kpi/sector_name", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -275,7 +275,7 @@ func main() {
 			return c.JSON(http.StatusOK, jsonByte)
 		}
 	})
-	e.GET("/query/kpi", func(c echo.Context) error {
+	e.GET("/api/query/kpi", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -290,7 +290,7 @@ func main() {
 		}
 	})
 
-	e.GET("/query/tbPRBNew/gen", func(c echo.Context) error {
+	e.GET("/api/query/tbPRBNew/gen", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -304,7 +304,7 @@ func main() {
 			return c.String(http.StatusOK, ret)
 		}
 	})
-	e.GET("/query/tbPRB/sector_name", func(c echo.Context) error {
+	e.GET("/api/query/tbPRB/sector_name", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -317,7 +317,7 @@ func main() {
 			return c.JSON(http.StatusOK, ret)
 		}
 	})
-	e.GET("/query/tbPRB", func(c echo.Context) error {
+	e.GET("/api/query/tbPRB", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -331,7 +331,7 @@ func main() {
 			return c.JSON(http.StatusOK, ret)
 		}
 	})
-	e.GET("/query/tbPRBNew", func(c echo.Context) error {
+	e.GET("/api/query/tbPRBNew", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)
@@ -346,7 +346,7 @@ func main() {
 		}
 	})
 
-	e.GET("/query/community", func(c echo.Context) error {
+	e.GET("/api/query/community", func(c echo.Context) error {
 		sess, err := session.Get("session", c)
 		if err != nil || !(sess.Values["level"] == 0 || sess.Values["level"] == 1) {
 			return c.NoContent(http.StatusUnauthorized)

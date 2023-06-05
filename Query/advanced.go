@@ -39,7 +39,7 @@ func GetCommunity(db *sql.DB) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
-	jsonData, _ := json.Marshal(communityMsg{louvainOut, "/download/" + randomName})
+	jsonData, _ := json.Marshal(communityMsg{louvainOut, "/api/download/" + randomName})
 	return jsonData, nil
 
 }

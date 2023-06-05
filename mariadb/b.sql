@@ -1,3 +1,8 @@
+create DATABASE LTE1
+    DATA DIRECTORY=’/mnt/disk1/db’
+    INDEX DIRECTORY=’/mnt/disk2/index’;
+
+
 create table info
 (
     username  varchar(255) charset utf8 not null

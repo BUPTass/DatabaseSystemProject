@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -23,8 +24,15 @@ const (
 var db *sqlx.DB
 
 func database_init() {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", username_, password_, ip_, port_, dataDbName_)
-	db, _ = sqlx.Open("mysql", dsn)
+	// Read the database connection details from environmental variables
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
+	db, _ = sqlx.Open("mysql", dbURI)
 	if err := db.Ping(); err != nil {
 		panic(err)
 	}

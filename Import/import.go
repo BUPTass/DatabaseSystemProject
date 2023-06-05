@@ -990,9 +990,9 @@ func AddtbMROData(db *sql.DB, path string) error {
 }
 
 func processCSV(rc io.Reader) (ch chan []string) {
-	// 8 channels in total
-	// Approximately 8-threaded stream reading
-	ch = make(chan []string, 8)
+	// 10 channels in total
+	// Approximately 10-threaded stream reading
+	ch = make(chan []string, 10)
 	go func() {
 		r := csv.NewReader(rc)
 		if _, err := r.Read(); err != nil { // Read header and ignore

@@ -774,7 +774,7 @@ func GeneratePRBNewTable(db *sql.DB, outputPath string) (string, error) {
 	}
 
 	if isDefault {
-		return "/download/" + randomName, nil
+		return "/api/download/" + randomName, nil
 	} else {
 		return outputPath + " saved!", nil
 	}
