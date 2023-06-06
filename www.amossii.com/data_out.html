@@ -1,0 +1,88 @@
+<link rel="stylesheet" href="layui/css/layui.css">
+<script src="layui/layui.js"></script>
+<div class="content" id="data_in" style="padding: 15px;">
+    <blockquote class="layui-elem-quote layui-text">
+        数据导出页面
+    </blockquote>
+    <div class="layui-card layui-panel">
+        <div class="layui-card-header">
+            数据导出
+        </div>
+        <div class="layui-card-body">
+
+            <form action="">
+                <div class="layui-form">
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="path" placeholder="输入导出路径" class="layui-input" id="data_tbMROData">
+                    </div>
+                    <button class="layui-btn demo-dropdown-base" id="data-name">
+                        <span>选择下载表格</span>
+                        <i class="layui-icon layui-icon-down layui-font-12"></i>
+                    </button>
+                    <a href="#" id="download1" style="visibility:hidden" download="PRBnew"><button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login8" id="ni">下载</button></a>
+                    <br>
+                    <br>
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="data-out">导出</button>
+                </div>
+            </form>
+           
+            <!-- <button type="button" class="layui-btn" id="ID-upload-demo-files-action">开始下载</button> -->
+        </div>
+    </div>
+    <br><br>
+</div>
+<script>
+    layui.use(function () {
+        var dropdown = layui.dropdown;
+        // 渲染
+        dropdown.render({
+            elem: '.demo-dropdown-base', // 绑定元素选择器，此处指向 class 可同时绑定多个元素
+            data: [{
+                title: 'tbCell',
+
+            }, {
+                title: 'tbPRB',
+            }, {
+                title: 'tbKPI',
+            }, {
+                title: 'tbC2I',
+            }, {
+                title: 'tbMROData',
+            }],
+            click: function (obj) {
+                this.elem.find('span').text(obj.title);
+            }
+        });
+    });
+    layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(data-out)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            // layer.alert(JSON.stringify(field), {
+            //     title: '当前填写的字段值',
+            //     // name: this.innerHTML + ' 的 value: ' + value
+            // });
+            var name = $.trim($("#data-name").text())
+            path = field['path']
+            console.log(name, path)
+            url = "http://8.130.47.185/api/export?table="+name+"&path="+path;
+            console.log(url)
+            $.get(url, field, function (datas) {
+                console.log(datas)
+                layer.msg(datas)
+                if(field['path']==""){
+                    $("#download1").attr("href","http://8.130.47.185"+datas)
+                    $("#download1").css("visibility","visible")}
+            }).error(function (xhr, status, info) { layer.alert("导出失败"); });
+            // 此处可执行 Ajax 等操作
+            // …
+            return false; // 阻止默认 form 跳转
+        });
+    });
+</script>

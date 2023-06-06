@@ -1,0 +1,25 @@
+
+#user{
+
+    flex-shrink: 0;
+    
+}
+#admin{
+
+    
+    position: relative;
+}
+.content{
+    position: relative;
+    flex-shrink: 0;
+    width: 1000px;
+    height: 1160px;
+}
+.box{
+            width: 1300px;
+            /* 超出部分隐藏 */
+            overflow: hidden;
+            margin: auto;
+            display: flex;
+            /* background-color: green; */
+        }

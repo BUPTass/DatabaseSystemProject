@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="layui/css/layui.css">
+<script src="layui/layui.js"></script>
+<script src="jquery/jquery.js"></script>
+<div class="content" id="admin" style="padding: 15px;">
+    <blockquote class="layui-elem-quote layui-text">
+        MRO/MRE测量数据解析
+    </blockquote>
+    <div class="layui-card layui-panel">
+        <!-- <div class="layui-card-header">
+            标题
+        </div> -->
+        <form action="">
+            <div class="layui-form">
+                <div class="layui-inline" style="width: 235px;">
+                    <input name="Cell_ID" placeholder="输入path" class="layui-input" id="ID-dropdown-demo-base-input1">
+                </div>
+                <!-- <div class="layui-btn-container"> -->
+                <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                    lay-filter="demo-login1" lay-on="page1">查询</button>
+            </div>
+        </form>
+    </div>
+    <br><br>
+</div>
+<script>
+     layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login1)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            // layer.alert(JSON.stringify(field), {
+            //     title: '当前填写的字段值',
+            //     // name: this.innerHTML + ' 的 value: ' + value
+            // });
+            url = "http://8.130.47.185/api/calc/MRO?filePath=" + field['Cell_ID']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.post(url, function (datas) {
+                console.log(datas)
+                layer.alert("请求成功!")
+            })
+            return false; // 阻止默认 form 跳转
+        });
+    });
+</script>

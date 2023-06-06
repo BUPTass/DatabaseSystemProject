@@ -1,0 +1,101 @@
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+    <script src="code.js/java.js"></script>
+    <script src="jquery/jquery.js"></script>
+    <script src="layui/layui.js"></script>
+    <div class="content" id="admin" style="padding: 15px;">
+</head>
+
+<body>
+    <blockquote class="layui-elem-quote layui-text">
+        主邻小区C2I干扰分析
+    </blockquote>
+    <form action="">
+        <div class="layui-form">
+             <div class="layui-inline" style="width: 235px;">
+                <input name="1_a" placeholder="输入MIN值" class="layui-input">
+            </div>
+            <!--<div class="layui-inline" style="width: 235px;">-->
+            <!--    <input name="1_b" placeholder="选择临小区" class="layui-input">-->
+            <!--</div> -->
+            <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                lay-filter="demo-anay1">分析</button>
+        </div>
+    </form>
+    <div class="content" id="user" style="padding: 15px;;">
+        <div class="layui-card layui-panel">
+            <div class="layui-card-body">
+                <div style="padding: 16px;">
+                    <table class="layui-hide" id="test1" lay-filter="test1"></table>
+                </div>
+            </div>
+        </div>
+        <br><br>
+    </div>
+    <script>
+        layui.use(function () {
+            var $ = layui.$;
+            var form = layui.form;
+            var layer = layui.layer;
+            form.on('submit(demo-anay1)', function (data) {
+                var field = data.field;
+                // layer.alert(JSON.stringify(field), {
+                //     title: '当前填写的字段值',
+                //     // name: this.innerHTML + ' 的 value: ' + value
+                // });
+                // 此处可执行 Ajax 等操作
+                // …
+                $.post("http://8.130.47.185/api/calc/C2Inew?min="+field['1_a'], function (datas) {
+                    console.log("hello")
+                    console.log(datas)
+                    var col =
+                    [
+                        {
+                            field: "SCELL",
+                            title: '主小区',
+                            sort: false
+                        },
+                        {
+                            field: "NCELL",
+                            title: '临小区',
+                            sort: false
+                        },
+                        {
+                            field: "RSRPmean",
+                            title: 'RSRPmean',
+                            sort: false
+                        },
+                        {
+                            field: "RSRPstd",
+                            title: 'RSRPstd',
+                            sort: false
+                        },
+                        {
+                            field: "PrbC2I9",
+                            title: 'PrbC2I9',
+                            sort: false
+                        },
+                        {
+                            field: "PrbABS6",
+                            title: 'PrbABS6',
+                            sort: false
+                        }
+                    ]
+                creatNormalTable("#test1", col,datas)
+
+                })
+                
+                return false; // 阻止默认 form 跳转
+            });
+        });
+
+
+    </script>
+
+</body>
+
+</html>

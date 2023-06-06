@@ -1,0 +1,474 @@
+<meta http-equiv="Access-Control-Allow-Origin" content="*">
+<link rel="stylesheet" href="layui/css/layui.css">
+<script src="code/highcharts.js"></script>
+<script src="code/modules/exporting.js"></script>
+<script src="code/modules/export-data.js"></script>
+<script src="code/modules/accessibility.js"></script>
+<style type="text/css">
+    .highcharts-figure,
+    .highcharts-data-table table {
+        min-width: 310px;
+        max-width: 800px;
+        margin: 1em auto;
+    }
+
+    #container {
+        height: 500px;
+        width: 900px;
+    }
+
+    .highcharts-data-table table {
+        font-family: Verdana, sans-serif;
+        border-collapse: collapse;
+        border: 1px solid #ebebeb;
+        margin: 10px auto;
+        text-align: center;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .highcharts-data-table caption {
+        padding: 1em 0;
+        font-size: 1.2em;
+        color: #555;
+    }
+
+    .highcharts-data-table th {
+        font-weight: 600;
+        padding: 0.5em;
+    }
+
+    .highcharts-data-table td,
+    .highcharts-data-table th,
+    .highcharts-data-table caption {
+        padding: 0.5em;
+    }
+
+    .highcharts-data-table thead tr,
+    .highcharts-data-table tr:nth-child(even) {
+        background: #f8f8f8;
+    }
+
+    .highcharts-data-table tr:hover {
+        background: #f1f7ff;
+    }
+</style>
+<div class="content" id="admin" style="padding: 15px;">
+    <blockquote class="layui-elem-quote layui-text">
+        业务查询
+    </blockquote>
+    <div class="layui-card layui-panel">
+        <!-- <div class="layui-card-header">
+            标题
+        </div> -->
+        <div class="layui-card-body">
+            <form action="">
+                <div class="layui-form">
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="Cell_ID" placeholder="小区配置信息查询" class="layui-input"
+                            id="ID-dropdown-demo-base-input1">
+                    </div>
+                    <!-- <div class="layui-btn-container"> -->
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login1" lay-on="page1">查询</button>
+                </div>
+            </form>
+            <form action="">
+                <div class="layui-form">
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="eNodeBID" placeholder="基站eNodeB信息查询" class="layui-input"
+                            id="ID-dropdown-demo-base-input2">
+                    </div>
+                    <!-- <div class="layui-btn-container"> -->
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login2">查询</button>
+                    <!-- </div> -->
+                </div>
+            </form>
+            <form action="">
+                <div class="layui-form">
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="Sector_ID" placeholder="小区KPI指标信息查询" class="layui-input"
+                            id="ID-dropdown-demo-base-input3">
+                    </div>
+
+
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="attribute1" placeholder="属性" class="layui-input" id="ID-dropdown-demo-base-input5">
+                    </div>
+
+
+                    <!-- <div class="layui-btn-container"> -->
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login3">查询</button>
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login5">画图</button>
+                    <!-- </div> -->
+                </div>
+            </form>
+            <form action="">
+                <div class="layui-form">
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="path" placeholder="填入新表保存路径" class="layui-input" >
+                    </div>
+
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login7">生成PRBnew</button>
+
+
+
+                    <a href="#" id="download1" style="visibility:hidden" download="PRBnew"><button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login8" id="ni">下载</button></a>
+
+
+
+                    <br>
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="PRB" placeholder="PRB信息统计与查询" class="layui-input"
+                            id="ID-dropdown-demo-base-input4">
+                    </div>
+
+
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="attribute2" placeholder="属性" class="layui-input" id="ID-dropdown-demo-base-input6">
+                    </div>
+                    <div class="layui-inline" style="width: 235px;">
+                        <input name="split" placeholder="时间粒度" class="layui-input" id="ID-dropdown-demo-base-input7">
+                    </div>
+
+
+                    <!-- <div class="layui-btn-container"> -->
+                    <div class="layui-inline">
+                        <label class="layui-form-label">时间范围</label>
+                        <div class="layui-input-inline">
+                            <input name="duration" type="text" class="layui-input" id="ID-laydate-range-datetime"
+                                placeholder=" - ">
+                        </div>
+                    </div>
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login4" lay-on="iframe">查询</button>
+                    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                        lay-filter="demo-login6">画图</button>
+                    
+                    <!-- </div> -->
+                </div>
+            </form>
+        </div>
+    </div>
+    <br><br>
+    <table class="layui-hide" id="ID-table-demo-data"></table>
+    <figure class="highcharts-figure">
+        <div id="container"></div>
+    </figure>
+</div>
+<script src="code.js/java.js"></script>
+<script src="layui/layui.js"></script>
+<script src="jquery/jquery.js"></script>
+<script src="code.js/search.js"></script>
+<script>
+    function load_item(id, key_list) {
+        layui.use(function () {
+            var dropdown = layui.dropdown;
+            var data_list = []
+            for (var i = 0; i < key_list.length; i++) {
+                data_list.push({ title: key_list[i] })
+            }
+            dropdown.render({
+                elem: id,
+                data: data_list,
+                click: function (obj) {
+                    this.elem.val(obj.title);
+                },
+                style: 'min-width: 235px;'
+            });
+        });
+    }
+    function creatChart(x, y, attribute, title_y, table_title, table_title2) {
+        Highcharts.chart('container', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: table_title
+            },
+            subtitle: {
+                text: table_title2
+            },
+            xAxis: {
+                categories: x,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: title_y
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            series: [{
+                name: attribute,
+                data: y
+            }]
+        });
+    }
+</script>
+<script>
+    renderdropdown("http://8.130.47.185/api/query/sector_name", "#ID-dropdown-demo-base-input1")
+    renderdropdown("http://8.130.47.185/api/query/enodeb_name", "#ID-dropdown-demo-base-input2")
+    renderdropdown("http://8.130.47.185/api/query/kpi/sector_name", "#ID-dropdown-demo-base-input3")
+    renderdropdown("http://8.130.47.185/api/query/tbPRB/sector_name", "#ID-dropdown-demo-base-input4")
+    load_item("#ID-dropdown-demo-base-input7", ['小时', '分钟'])
+</script>
+<script>
+    layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            layer.alert(JSON.stringify(field), {
+                title: '当前填写的字段值',
+                // name: this.innerHTML + ' 的 value: ' + value
+            });
+            // 此处可执行 Ajax 等操作
+            // …
+            return false; // 阻止默认 form 跳转
+        });
+    });
+</script>
+<script>
+    layui.use(function () {
+        var laydate = layui.laydate;
+        // 日期范围 - 左右面板独立选择模式
+        laydate.render({
+            elem: '#ID-laydate-range',
+            range: ['#ID-laydate-start-date', '#ID-laydate-end-date']
+        });
+        // 日期范围 - 左右面板联动选择模式
+        laydate.render({
+            elem: '#ID-laydate-rangeLinked',
+            range: ['#ID-laydate-start-date-1', '#ID-laydate-end-date-1'],
+            rangeLinked: true // 开启日期范围选择时的区间联动标注模式 ---  2.8+ 新增
+        });
+
+        // 年范围
+        laydate.render({
+            elem: '#ID-laydate-range-year',
+            type: 'year',
+            range: true
+        });
+
+        // 年月范围
+        laydate.render({
+            elem: '#ID-laydate-range-month',
+            type: 'month',
+            range: true
+        });
+
+        // 时间范围
+        laydate.render({
+            elem: '#ID-laydate-range-time',
+            type: 'time',
+            range: true
+        });
+
+        // 日期时间范围
+        laydate.render({
+            elem: '#ID-laydate-range-datetime',
+            type: 'datetime',
+            range: true
+        });
+    });
+</script>
+
+
+<script>
+    layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login1)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            url = "http://8.130.47.185/api/query/tbCell?sector=" + field['Cell_ID']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.get(url, function (datas) {
+                console.log(datas)
+                console.log(col)
+                var col = [[]];
+                var key = Object.keys(datas[0])
+                for (var i = 0; i < key.length; i++) {
+                    col[0].push({ field: key[i], title: key[i], width: 120 })
+                }
+                creatNormalTable('#ID-table-demo-data', col[0], datas)
+            })
+            return false; // 阻止默认 form 跳转
+        });
+    });
+    layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login2)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            url = "http://8.130.47.185/api/query/enodeb?enodeb=" + field['eNodeBID']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.get(url, function (datas) {
+                console.log(datas)
+                console.log(col)
+                var col = [[]];
+                var key = Object.keys(datas[0])
+                for (var i = 0; i < key.length; i++) {
+                    col[0].push({ field: key[i], title: key[i], width: 120 })
+                }
+                creatNormalTable('#ID-table-demo-data', col[0], datas)
+            })
+            return false; // 阻止默认 form 跳转
+        });
+    });
+    layui.use(function () {
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login3)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            url = "http://8.130.47.185/api/query/kpi?sector=" + field['Sector_ID']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.get(url, function (datas) {
+                console.log(datas)
+                var col = [[]];
+                var key = Object.keys(datas[0])
+                for (var i = 0; i < key.length; i++) {
+                    col[0].push({ field: key[i], title: key[i], width: 120 })
+                }
+                var attribute = key.slice(4, key.length)
+                console.log(attribute)
+                load_item("#ID-dropdown-demo-base-input5", attribute)
+
+                creatNormalTable('#ID-table-demo-data', col[0], datas)
+            })
+            return false; // 阻止默认 form 跳转
+        });
+        form.on('submit(demo-login5)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            url = "http://8.130.47.185/api/query/kpi?sector=" + field['Sector_ID']
+            // 此处可执行 Ajax 等操作
+            // …
+            var attribute = field['attribute1']
+            var list_x = []
+            var list_y = []
+            $.get(url, function (datas) {
+                console.log(datas)
+                for (var i = 0; i < datas.length; i++) {
+                    var item = datas[i]
+                    list_x.push(item["StartTime"])
+                    list_y.push(item[attribute])
+                }
+                creatChart(list_x, list_y, attribute, "KPI指标", field['Sector_ID'] + "小区KPI指标统计", "统计粒度：天")
+
+            })
+            return false; // 阻止默认 form 跳转
+        });
+    });
+    layui.use(function () {
+        var isnew=false
+        var url_old = "http://8.130.47.185/api/query/tbPRB?sector="
+        var $ = layui.$;
+        var form = layui.form;
+        var layer = layui.layer;
+        // 提交事件
+        form.on('submit(demo-login7)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            var url="http://8.130.47.185/api/query/tbPRBNew/gen?path="+ field['path']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.get(url, function (datas) {
+                layer.msg(datas)
+                isnew=true
+                url_old="http://8.130.47.185/api/query/tbPRBNew?sector="
+                if(field['path']==""){
+                    $("#download1").attr("href","http://8.130.47.185"+datas)
+                    $("#download1").css("visibility","visible")}
+            })
+            return false; // 阻止默认 form 跳转
+        });
+
+
+        form.on('submit(demo-login4)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            var url=url_old+ field['PRB']
+            // 此处可执行 Ajax 等操作
+            // …
+            console.log(url)
+            $.get(url, function (datas) {
+                console.log(datas)
+                console.log(col)
+                var col = [[]];
+                var key = Object.keys(datas[0])
+                for (var i = 0; i < key.length; i++) {
+                    col[0].push({ field: key[i], title: key[i], width: 120 })
+                }
+                var attribute = key.slice(4, key.length)
+                console.log(attribute)
+                load_item("#ID-dropdown-demo-base-input6", attribute)
+                creatNormalTable('#ID-table-demo-data', col[0], datas)
+            })
+            return false; // 阻止默认 form 跳转
+        });
+        form.on('submit(demo-login6)', function (data) {
+            var field = data.field; // 获取表单字段值
+            // 显示填写结果，仅作演示用
+            var url=url_old+ field['PRB']
+            // 此处可执行 Ajax 等操作
+            // …
+            var attribute = field['attribute2']
+            var split = field['split']
+            var list_x = []
+            var list_y = []
+            var time1 = field['duration'].slice(0, 19)
+            var time2 = field['duration'].slice(22, field['duration'].length)
+            $.get(url, function (datas) {
+                console.log(datas)
+                for (var i = 0; i < datas.length; i++) {
+                    var item = datas[i]
+                    var x = item["StartTime"]
+                    if (x < time1 || x > time2) continue;
+                    if (split == "分钟" || (x[14] == '0' && x[15] == '0' && x[17] == '0' && x[18] == '0')) {
+                        list_x.push(x)
+                        list_y.push(-item[attribute])
+                    }
+
+                }
+                var heade=field['PRB'] + "小区PRB干扰统计（相反数）"
+                if(isnew)heade=field['PRB'] + "小区PRB干扰统计（相反数）（PRBnew）"
+                creatChart(list_x, list_y, attribute, "PRB干扰值",heade , "统计粒度：" + split)
+
+            })
+            return false; // 阻止默认 form 跳转
+        });
+    });
+</script>

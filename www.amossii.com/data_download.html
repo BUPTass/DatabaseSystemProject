@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="layui/css/layui.css">
+<script src="layui/layui.js"></script>
+<div class="layui-btn-container">
+    <button class="layui-btn demo-dropdown-base">
+        <span>选择导入信息</span>
+        <i class="layui-icon layui-icon-down layui-font-12"></i>
+        
+    </button>
+    <br>
+        <button type="button" class="layui-btn">下载</button>
+
+</div>
+<script>
+    layui.use(function () {
+        var dropdown = layui.dropdown;
+        // 渲染
+        dropdown.render({
+            elem: '.demo-dropdown-base', // 绑定元素选择器，此处指向 class 可同时绑定多个元素
+            data: [{
+                title: '网络配置信息导入',
+                id: 100
+            }, {
+                title: 'KPI指标信息导入',
+                id: 101
+            }, {
+                title: 'PRB干扰信息导入',
+                id: 102
+            },{
+                title: 'MRO数据导入',
+                id: 103
+            }],
+            click: function (obj) {
+                this.elem.find('span').text(obj.title);
+            }
+        });
+    });
+</script>

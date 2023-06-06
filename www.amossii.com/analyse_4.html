@@ -1,0 +1,22 @@
+<link rel="stylesheet" href="layui/css/layui.css">
+<script src="layui/layui.js"></script>
+<script src="jquery/jquery.js"></script>
+<div class="content" id="admin" style="padding: 15px;">
+    <blockquote class="layui-elem-quote layui-text">
+        网络干扰结构分析
+    </blockquote>
+    <button type="button" class="layui-btn" style="display: inline-block;" lay-submit id="button">开始分析</button>
+    <br>
+    <img id="pic" src="" alt="" height="900" width="900" />
+    <br><br>
+
+</div>
+<script>
+    $("#button").click(function () {
+        var url = "http://8.130.47.185/api/query/community"
+        $.get(url, function (datas) {
+            console.log(datas)
+            $("#pic").attr("src","http://8.130.47.185"+datas['pic'])
+        })
+    })
+</script>

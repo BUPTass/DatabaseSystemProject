@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+    <script src="code.js/java.js"></script>
+    <script src="jquery/jquery.js"></script>
+    <script src="layui/layui.js"></script>
+    <div class="content" id="admin" style="padding: 15px;">
+</head>
+
+<body>
+    <blockquote class="layui-elem-quote layui-text">
+        重叠覆盖干扰小区三元组分析
+    </blockquote>
+    <form action="">
+        <div class="layui-form">
+            <div class="layui-inline" style="width: 235px;">
+                <input name="2_x" placeholder="输入阈值参数" class="layui-input">
+            </div>
+            <button type="button" class="layui-btn" style="display: inline-block;" lay-submit
+                lay-filter="demo-login4">分析</button>
+        </div>
+    </form>
+    <div class="content" id="user" style="padding: 15px;;">
+        <div class="layui-card layui-panel">
+            <div class="layui-card-body">
+                <div style="padding: 16px;">
+                    <table class="layui-hide" id="test" lay-filter="test" page:false></table>
+                </div>
+            </div>
+        </div>
+        <br><br>
+    </div>
+    <script>
+        layui.use(function () {
+            var $ = layui.$;
+            var form = layui.form;
+            var layer = layui.layer;
+            form.on('submit(demo-login4)', function (data) {
+                var field = data.field;
+
+                // 此处可执行 Ajax 等操作
+                // 
+                console.log(data.field)
+                var url="http://8.130.47.185/api/calc/C2I3?x="+field['2_x']
+                $.post(url, function (datas) {
+                    console.log("hello")
+                    console.log(datas)
+                    var col =
+                    [
+                        {
+                            field: "A",
+                            title: 'A小区',
+                            sort: false
+                        },
+                        {
+                            field: "B",
+                            title: 'B小区',
+                            sort: false
+                        },
+                        {
+                            field: "C",
+                            title: 'C小区',
+                            sort: false
+                        }
+                    ]
+                creatNormalTable("#test", col,datas)
+                 // 阻止默认 form 跳转
+
+                })
+                return false;
+            });
+        });
+
+
+    </script>
+
+</body>
+
+</html>
