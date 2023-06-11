@@ -115,7 +115,7 @@ func TableAsCSV(db *sql.DB, outputPath, tableName string) (string, error) {
 
 	if isDefault {
 		os.Rename("/tmp/tmp/"+randomName, "./download/"+randomName)
-		return "/download/" + randomName, nil
+		return "/api/download/" + randomName, nil
 	} else {
 		return outputPath + " saved!", nil
 	}

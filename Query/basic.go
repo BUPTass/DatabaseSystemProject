@@ -758,7 +758,7 @@ func GeneratePRBNewTable(db *sql.DB, outputPath string) (string, error) {
 		return "", err
 	}
 
-	randomName := fmt.Sprintf("tbPRBNew-%d.csv", time.Now().UnixNano())
+	randomName := fmt.Sprintf("tbPRBNew-%d.xlsx", time.Now().UnixNano())
 	isDefault := true
 	if len(outputPath) == 0 {
 		// default storage path

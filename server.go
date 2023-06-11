@@ -59,7 +59,7 @@ func main() {
 	e.GET("/api/show/users", controllers.GetUsers)                        //show all users
 	e.GET("/api/show/users/unconfirmed", controllers.GetUnconfirmedUsers) //show unconfirmed users
 	e.POST("/api/add/user", controllers.AddUser)                          //add user
-	e.DELETE("/delete/user", controllers.DeleteUser)                      //delete user
+	e.DELETE("/api/delete/user", controllers.DeleteUser)                  //delete user
 	e.POST("/api/register", controllers.Register)                         //user register
 
 	//database management
@@ -75,7 +75,7 @@ func main() {
 
 	e.GET("/api/ping", func(c echo.Context) error { return c.String(http.StatusOK, "hello") })
 
-	e.Static("/download", "./download")
+	e.Static("/api/download", "./download")
 	e.POST("/api/import/tbCell", func(c echo.Context) error {
 		path := c.FormValue("path")
 
